@@ -345,9 +345,120 @@
         
           
         
+          
+        
       
     
     
+      
+        
+          <div class='post-wrapper'>
+            <article class="post white-box shadow floatable reveal ">
+  
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  <h2 class="title">
+    <a href="/mysql8-0-22-rpm%E5%AE%89%E8%A3%85.html">
+      mysql8.0.22-rpm安装
+    </a>
+  </h2>
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/mysql/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>mysql</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2021年1月25日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  <div class="new-meta-item wordcount">
+    <a class='notlink'>
+      <i class="fas fa-keyboard" aria-hidden="true"></i>
+      <p>字数：1.4k字</p>
+    </a>
+  </div>
+  <div class="new-meta-item readtime">
+    <a class='notlink'>
+      <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+      <p>时长：6分钟</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+  <section class="article typo">
+    <div class="article-entry" itemprop="articleBody">
+      <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>某个远古系统，随着业务量的增长，服务的响应速度过慢，导致用户体验较差。就数据库层面而言，为了寻求优化方案，听闻mysql8对比系统依赖的mysql5.7快了不止一倍，所以本文就mysql的升级安装做一个总结。</p>
+<h2 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h2><h3 id="历史数据备份"><a href="#历史数据备份" class="headerlink" title="历史数据备份"></a>历史数据备份</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#如果需要指定表名 可以添加 --tables [表名] 命令</span></span><br><span class="line">mysqldump -h [ip地址:默认localhost] -u[用户名] -p[密码] [数据库名] &gt; demo.sql</span><br></pre></td></tr></table></figure>
+      
+        
+          <div class="button readmore">
+            <a href="/mysql8-0-22-rpm%E5%AE%89%E8%A3%85.html">
+              <i class="fas fa-book-open fa-fw" aria-hidden="true"></i> Read More
+            </a>
+          </div>
+        
+      
+    </div>
+  </section>
+</article>
+
+          </div>
+        
       
         
           <div class='post-wrapper'>
@@ -608,6 +719,11 @@
             ><div class='name'>lock</div><div class='badge'>(1)</div></a></li>
         
           <li><a class="flat-box"
+            title="/categories/mysql/" href="/categories/mysql/"
+            id="categoriesmysql"
+            ><div class='name'>mysql</div><div class='badge'>(1)</div></a></li>
+        
+          <li><a class="flat-box"
             title="/categories/netty/" href="/categories/netty/"
             id="categoriesnetty"
             ><div class='name'>netty</div><div class='badge'>(2)</div></a></li>
@@ -664,7 +780,7 @@
 
 
     <div class='content'>
-      <a href="/tags/DirectByteBuffer/" style="font-size: 14px; color: #999">DirectByteBuffer</a> <a href="/tags/JVM/" style="font-size: 14px; color: #999">JVM</a> <a href="/tags/cache/" style="font-size: 14px; color: #999">cache</a> <a href="/tags/ceph/" style="font-size: 19px; color: #777">ceph</a> <a href="/tags/cxf/" style="font-size: 14px; color: #999">cxf</a> <a href="/tags/date/" style="font-size: 14px; color: #999">date</a> <a href="/tags/db/" style="font-size: 14px; color: #999">db</a> <a href="/tags/distributed-lock/" style="font-size: 14px; color: #999">distributed-lock</a> <a href="/tags/elasticsearch/" style="font-size: 14px; color: #999">elasticsearch</a> <a href="/tags/heap/" style="font-size: 14px; color: #999">heap</a> <a href="/tags/java/" style="font-size: 24px; color: #555">java</a> <a href="/tags/jvm/" style="font-size: 14px; color: #999">jvm</a> <a href="/tags/kafka/" style="font-size: 14px; color: #999">kafka</a> <a href="/tags/multi-thread/" style="font-size: 14px; color: #999">multi-thread</a> <a href="/tags/mysql/" style="font-size: 14px; color: #999">mysql</a> <a href="/tags/netty/" style="font-size: 19px; color: #777">netty</a> <a href="/tags/nginx/" style="font-size: 14px; color: #999">nginx</a> <a href="/tags/oss/" style="font-size: 19px; color: #777">oss</a> <a href="/tags/rabbitmq/" style="font-size: 14px; color: #999">rabbitmq</a> <a href="/tags/redis/" style="font-size: 14px; color: #999">redis</a> <a href="/tags/spring/" style="font-size: 14px; color: #999">spring</a> <a href="/tags/springcloudstream/" style="font-size: 14px; color: #999">springcloudstream</a> <a href="/tags/sso/" style="font-size: 14px; color: #999">sso</a> <a href="/tags/tcp/" style="font-size: 14px; color: #999">tcp</a> <a href="/tags/webservice/" style="font-size: 14px; color: #999">webservice</a> <a href="/tags/websocket/" style="font-size: 14px; color: #999">websocket</a> <a href="/tags/xml-http/" style="font-size: 14px; color: #999">xml/http</a> <a href="/tags/zookeeper/" style="font-size: 14px; color: #999">zookeeper</a>
+      <a href="/tags/DirectByteBuffer/" style="font-size: 14px; color: #999">DirectByteBuffer</a> <a href="/tags/JVM/" style="font-size: 14px; color: #999">JVM</a> <a href="/tags/cache/" style="font-size: 14px; color: #999">cache</a> <a href="/tags/ceph/" style="font-size: 19px; color: #777">ceph</a> <a href="/tags/cxf/" style="font-size: 14px; color: #999">cxf</a> <a href="/tags/date/" style="font-size: 14px; color: #999">date</a> <a href="/tags/db/" style="font-size: 14px; color: #999">db</a> <a href="/tags/distributed-lock/" style="font-size: 14px; color: #999">distributed-lock</a> <a href="/tags/elasticsearch/" style="font-size: 14px; color: #999">elasticsearch</a> <a href="/tags/heap/" style="font-size: 14px; color: #999">heap</a> <a href="/tags/java/" style="font-size: 24px; color: #555">java</a> <a href="/tags/jvm/" style="font-size: 14px; color: #999">jvm</a> <a href="/tags/kafka/" style="font-size: 14px; color: #999">kafka</a> <a href="/tags/multi-thread/" style="font-size: 14px; color: #999">multi-thread</a> <a href="/tags/mysql/" style="font-size: 19px; color: #777">mysql</a> <a href="/tags/netty/" style="font-size: 19px; color: #777">netty</a> <a href="/tags/nginx/" style="font-size: 14px; color: #999">nginx</a> <a href="/tags/oss/" style="font-size: 19px; color: #777">oss</a> <a href="/tags/rabbitmq/" style="font-size: 14px; color: #999">rabbitmq</a> <a href="/tags/redis/" style="font-size: 14px; color: #999">redis</a> <a href="/tags/spring/" style="font-size: 14px; color: #999">spring</a> <a href="/tags/springcloudstream/" style="font-size: 14px; color: #999">springcloudstream</a> <a href="/tags/sso/" style="font-size: 14px; color: #999">sso</a> <a href="/tags/tcp/" style="font-size: 14px; color: #999">tcp</a> <a href="/tags/webservice/" style="font-size: 14px; color: #999">webservice</a> <a href="/tags/websocket/" style="font-size: 14px; color: #999">websocket</a> <a href="/tags/xml-http/" style="font-size: 14px; color: #999">xml/http</a> <a href="/tags/zookeeper/" style="font-size: 14px; color: #999">zookeeper</a>
     </div>
   </section>
 

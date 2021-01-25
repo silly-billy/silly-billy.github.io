@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>mysql8.0.22-rpm安装</title>
+      <link href="/mysql8-0-22-rpm%E5%AE%89%E8%A3%85.html"/>
+      <url>/mysql8-0-22-rpm%E5%AE%89%E8%A3%85.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>某个远古系统，随着业务量的增长，服务的响应速度过慢，导致用户体验较差。就数据库层面而言，为了寻求优化方案，听闻mysql8对比系统依赖的mysql5.7快了不止一倍，所以本文就mysql的升级安装做一个总结。</p><h2 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h2><h3 id="历史数据备份"><a href="#历史数据备份" class="headerlink" title="历史数据备份"></a>历史数据备份</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#如果需要指定表名 可以添加 --tables [表名] 命令</span></span><br><span class="line">mysqldump -h [ip地址:默认localhost] -u[用户名] -p[密码] [数据库名] &gt; demo.sql</span><br></pre></td></tr></table></figure><a id="more"></a><h3 id="删除原有mysql服务"><a href="#删除原有mysql服务" class="headerlink" title="删除原有mysql服务"></a>删除原有mysql服务</h3><p>查看历史安装过哪些mysql的rpm包</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rpm -qa | grep mysql</span><br></pre></td></tr></table></figure><p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/mysql/1.png" alt="result"></p><p>删除rpm包</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#例如： </span></span><br><span class="line">rpm -e --nodeps mysql-community-common-5.7.30-1.el7.x86_64 </span><br><span class="line"><span class="comment">#多个rpm以逗号分开或者执行多次</span></span><br></pre></td></tr></table></figure><p>查询所有Mysql对应的文件夹</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">whereis mysql</span><br><span class="line">find / -name mysql</span><br><span class="line"><span class="comment">#删除所有</span></span><br><span class="line">rm -rf [*]</span><br></pre></td></tr></table></figure><p>检查mysql用户组和用户是否存在，没有则创建</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#检查</span></span><br><span class="line">cat /etc/group | grep mysql</span><br><span class="line">cat /etc/passwd |grep mysql</span><br><span class="line"><span class="comment">#添加</span></span><br><span class="line">groupadd mysql</span><br><span class="line">useradd -r -g mysql mysql</span><br></pre></td></tr></table></figure><h3 id="rpm包下载"><a href="#rpm包下载" class="headerlink" title="rpm包下载"></a>rpm包下载</h3><p>官网地址: <a href="https://downloads.mysql.com/archives/community/" target="_blank" rel="noopener">https://downloads.mysql.com/archives/community/</a></p><p>centos7 mysql version8.0.22 需要下载的rpm包如下:</p><p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/mysql/2.png" alt="result"></p><h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><h3 id="rpm包安装"><a href="#rpm包安装" class="headerlink" title="rpm包安装"></a>rpm包安装</h3><p>因为mysql rpm包的server、client存在依赖关系，所以需要有顺序的执行安装rpm包，可以按如下方法操作</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rpm -ivh mysql-community-common-8.0.22-1.el7.x86_64.rpm</span><br><span class="line">rpm -ivh mysql-community-client-plugins-8.0.22-1.el7.x86_64.rpm</span><br><span class="line">rpm -ivh mysql-community-libs-8.0.22-1.el7.x86_64.rpm</span><br><span class="line">rpm -ivh mysql-community-client-8.0.22-1.el7.x86_64.rpm</span><br><span class="line">rpm -ivh mysql-community-server-8.0.22-1.el7.x86_64.rpm</span><br></pre></td></tr></table></figure><p>执行 <code>rpm -qa | grep mysql</code> 查看rpm包是否安装成功</p><h3 id="my-cnf配置"><a href="#my-cnf配置" class="headerlink" title="my.cnf配置"></a>my.cnf配置</h3><p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/mysql/3.png" alt="result"></p><p>可用上图中的<code>df -h</code>命令查看每个挂载磁盘的剩余空间容量，一般而言根目录即 / 目录空间分配都不会太大。而mysql默认的数据目录存放在/var/lib/mysql下，在业务数据量很大的时候，很容易让磁盘占满导致数据无法写入，这样不仅会影响本服务，同时在该服务器上的其他业务系统也会受到影响，这显然是不可取的。<br>所以我们需要修改mysql的数据目录地址，上图中可以看出/home下的磁盘较为充裕</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#/home/mysql充当新的数据目录</span></span><br><span class="line">mkdir -p /home/mysql</span><br><span class="line"><span class="comment">#指定用户组</span></span><br><span class="line">chown -R mysql:mysql /home/mysql</span><br><span class="line"><span class="comment">#添加权限</span></span><br><span class="line">chmod -R 755 /home/mysql</span><br></pre></td></tr></table></figure><p>还不算完，这里有个坑，但不深追。需要关闭SELinux，可操作方法</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#1、临时关闭（不用重启机器）：</span></span><br><span class="line">setenforce 0</span><br><span class="line"><span class="comment">#2.修改/etc/selinux/config 文件</span></span><br><span class="line">将SELINUX=enforcing改为SELINUX=disabled</span><br><span class="line"><span class="comment">#重启机器即可</span></span><br></pre></td></tr></table></figure><p>否则在后续启动mysql时会发现权限不足<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/mysql/4.png" alt="result"></p><p>my.cnf调优的配置参考</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"># For advice on how to change settings please see</span><br><span class="line"># http:&#x2F;&#x2F;dev.mysql.com&#x2F;doc&#x2F;refman&#x2F;8.0&#x2F;en&#x2F;server-configuration-defaults.html</span><br><span class="line"></span><br><span class="line">[mysqld]</span><br><span class="line">#</span><br><span class="line"># Remove leading # and set to the amount of RAM for the most important data</span><br><span class="line"># cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.</span><br><span class="line">innodb_buffer_pool_size &#x3D; 64G</span><br><span class="line">#</span><br><span class="line"># Remove the leading &quot;# &quot; to disable binary logging</span><br><span class="line"># Binary logging captures changes between backups and is enabled by</span><br><span class="line"># default. It&#39;s default setting is log_bin&#x3D;binlog</span><br><span class="line"># disable_log_bin</span><br><span class="line">#</span><br><span class="line"># Remove leading # to set options mainly useful for reporting servers.</span><br><span class="line"># The server defaults are faster for transactions and fast SELECTs.</span><br><span class="line"># Adjust sizes as needed, experiment to find the optimal values.</span><br><span class="line"># join_buffer_size &#x3D; 128M</span><br><span class="line">read_buffer_size &#x3D; 4M</span><br><span class="line">sort_buffer_size &#x3D; 8M</span><br><span class="line">read_rnd_buffer_size &#x3D; 8M</span><br><span class="line">#</span><br><span class="line"># Remove leading # to revert to previous value for default_authentication_plugin,</span><br><span class="line"># this will increase compatibility with older clients. For background, see:</span><br><span class="line"># https:&#x2F;&#x2F;dev.mysql.com&#x2F;doc&#x2F;refman&#x2F;8.0&#x2F;en&#x2F;server-system-variables.html#sysvar_default_authentication_plugin</span><br><span class="line"># default-authentication-plugin&#x3D;mysql_native_password</span><br><span class="line">#指定新的数据目录</span><br><span class="line">datadir&#x3D;&#x2F;home&#x2F;mysql</span><br><span class="line">socket&#x3D;&#x2F;var&#x2F;lib&#x2F;mysql&#x2F;mysql.sock</span><br><span class="line">#忽略大小写 默认为0 在mysqld --initialize执行完成后 无法通过命令修改</span><br><span class="line">lower_case_table_names&#x3D;1</span><br><span class="line">log-error&#x3D;&#x2F;var&#x2F;log&#x2F;mysqld.log</span><br><span class="line">pid-file&#x3D;&#x2F;var&#x2F;run&#x2F;mysqld&#x2F;mysqld.pid</span><br><span class="line">innodb_log_buffer_size &#x3D; 20M</span><br><span class="line">tmp_table_size &#x3D; 16M</span><br><span class="line">#mysql8默认编码utf8mb4,兼容utf8这里可以不指定</span><br></pre></td></tr></table></figure><h3 id="编译启动mysql"><a href="#编译启动mysql" class="headerlink" title="编译启动mysql"></a>编译启动mysql</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#初始化mysql</span></span><br><span class="line">mysqld --initialize --user=mysql --datadir=/home/mysql</span><br></pre></td></tr></table></figure><p>查看默认密码<code>grep 'temporary password' /var/log/mysqld.log</code></p><p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/mysql/5.png" alt="result"></p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#启动mysql</span></span><br><span class="line">service mysqld start</span><br><span class="line"><span class="comment">#关闭mysql</span></span><br><span class="line">service mysqld stop</span><br><span class="line"><span class="comment">#重启</span></span><br><span class="line">service mysqld restart</span><br></pre></td></tr></table></figure><h3 id="修改默认密码和开放远程连接"><a href="#修改默认密码和开放远程连接" class="headerlink" title="修改默认密码和开放远程连接"></a>修改默认密码和开放远程连接</h3><p>执行<code>mysql -uroot -p</code>,跳出<code>enter password:</code>输入默认密码即可进入mysql命令列界面。</p><p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/mysql/6.png" alt="result"><br>由上图可以看到，执行mysql其他命令之前，我们需要重置mysql的密码，当然除此之外，我们还需要使用其他命令</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#开放远程连接</span></span><br><span class="line">use mysql;</span><br><span class="line">update user <span class="built_in">set</span> host = <span class="string">'%'</span> <span class="built_in">where</span> user = <span class="string">'root'</span>;</span><br><span class="line"><span class="comment">#更改加密方式</span></span><br><span class="line">alter user <span class="string">'root'</span>@<span class="string">'%'</span> identified with mysql_native_password by <span class="string">'123456'</span>;</span><br></pre></td></tr></table></figure><p>原因是mysql8的caching_sha2_password属于强加密规则，远程连接工具navicat可能会不支持，并抛出2059错误<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/mysql/8.png" alt="result"><br>再次访问，可以看到命令成功执行<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/mysql/7.png" alt="result"></p><h3 id="其他注意事项"><a href="#其他注意事项" class="headerlink" title="其他注意事项"></a>其他注意事项</h3><p>在有些机器上安装mysql8，出现了登陆密码的弱口令校验，所以不能设置为像 “123456”这样简单的密码，为了安全考虑，可以将密码设置为中英文+大小写的组合</p><h2 id="数据恢复"><a href="#数据恢复" class="headerlink" title="数据恢复"></a>数据恢复</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#第一种方法</span></span><br><span class="line">mysql -u[用户名] -p[密码]  [数据库名] &lt; demo.sql</span><br><span class="line"><span class="comment">#第二种方法 </span></span><br><span class="line">mysql -u[用户名] -p[密码]</span><br><span class="line"><span class="comment">#进入命令列界面</span></span><br><span class="line">mysql&gt;use database;</span><br><span class="line">mysql&gt;<span class="built_in">source</span> demo.sql;</span><br></pre></td></tr></table></figure><h2 id="数据目录迁移"><a href="#数据目录迁移" class="headerlink" title="数据目录迁移"></a>数据目录迁移</h2><p>如果出现磁盘空间不足，需要扩展空间时，可以采用软连接的方式快速的将业务数据迁移出去。(前提:关闭SELinux)</p><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">##一定要先关闭数据库</span></span><br><span class="line">systemctl stop mysqld</span><br><span class="line"></span><br><span class="line"><span class="comment">#在磁盘充足环境创建mysql目录</span></span><br><span class="line">mkdir -p /home/mysql</span><br><span class="line"></span><br><span class="line"><span class="comment">#找到数据目录(例子datadir=/var/lib/mysql)</span></span><br><span class="line">cat /etc/my.cnf|grep datadir</span><br><span class="line"></span><br><span class="line"><span class="comment">#拷贝数据到新的mysql目录下</span></span><br><span class="line">cp /var/lib/mysql/*  /home/mysql/</span><br><span class="line"></span><br><span class="line"><span class="comment">#指定用户组</span></span><br><span class="line">chown -R mysql:mysql /home/mysql</span><br><span class="line"></span><br><span class="line"><span class="comment">#修改数据目录名字(先保留原先数据目录 验证完可删除)</span></span><br><span class="line">mv /var/lib/mysql /var/lib/mysql_bak</span><br><span class="line"></span><br><span class="line"><span class="comment">#建立软连接(在原数据目录下)</span></span><br><span class="line">ln -s  /home/mysql  /var/lib/mysql</span><br><span class="line"></span><br><span class="line"><span class="comment">#启动数据库验证</span></span><br><span class="line">systemctl start mysqld</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> mysql </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> mysql </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>单点登录-无插件式SSO（cas标准）流程</title>
       <link href="/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95-%E6%97%A0%E6%8F%92%E4%BB%B6%E5%BC%8FSSO%EF%BC%88cas%E6%A0%87%E5%87%86%EF%BC%89%E6%B5%81%E7%A8%8B.html"/>
       <url>/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95-%E6%97%A0%E6%8F%92%E4%BB%B6%E5%BC%8FSSO%EF%BC%88cas%E6%A0%87%E5%87%86%EF%BC%89%E6%B5%81%E7%A8%8B.html</url>
@@ -107,9 +132,9 @@
       
         <tags>
             
-            <tag> distributed-lock </tag>
-            
             <tag> mysql </tag>
+            
+            <tag> distributed-lock </tag>
             
             <tag> redis </tag>
             
@@ -220,9 +245,9 @@
       
       <categories>
           
-          <category> ceph </category>
-          
           <category> java </category>
+          
+          <category> ceph </category>
           
           <category> oss </category>
           
@@ -233,9 +258,9 @@
       
         <tags>
             
-            <tag> ceph </tag>
-            
             <tag> java </tag>
+            
+            <tag> ceph </tag>
             
             <tag> oss </tag>
             
@@ -379,9 +404,9 @@
       
       <categories>
           
-          <category> ceph </category>
-          
           <category> java </category>
+          
+          <category> ceph </category>
           
           <category> oss </category>
           
@@ -392,9 +417,9 @@
       
         <tags>
             
-            <tag> ceph </tag>
-            
             <tag> java </tag>
+            
+            <tag> ceph </tag>
             
             <tag> oss </tag>
             

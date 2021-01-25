@@ -355,6 +355,116 @@
       
         
   <h2 class="title">
+    <a href="/elasticsearch-high-level-client.html">
+      elasticsearch-high-level-client
+    </a>
+  </h2>
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/elasticsearch/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>elasticsearch</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2020年5月18日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  <div class="new-meta-item wordcount">
+    <a class='notlink'>
+      <i class="fas fa-keyboard" aria-hidden="true"></i>
+      <p>字数：2.6k字</p>
+    </a>
+  </div>
+  <div class="new-meta-item readtime">
+    <a class='notlink'>
+      <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+      <p>时长：12分钟</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+  <section class="article typo">
+    <div class="article-entry" itemprop="articleBody">
+      <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>项目中需要对新闻发布内容做全文检索，基于原本的mysql数据库已经无法满足现有的需求了，所以需要用到es+ik分词器作为技术栈，经过调研发现适用于es的java客户端主流的有三种：<small><red>Java High Level REST Client</red></small>、<small><red>JestClient</red></small>、<small><red>spring-data-elasticsearch</red></small>。（当然还有es版本弃子：Java Low Level REST Client，底层是基于transport完成数据访问，而es7.0之后不在支持transport故不在考虑范围内）。<br>去<a href="https://github.com/spring-projects/spring-data-elasticsearch" target="_blank" rel="noopener">同性交友网站</a>看了下spring-data-es，发现它本身也是推荐JestClient，再然后才是自家的java客户端。<br>对比JestClient和Java-High-Level-REST-Client：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">JestClient:底层基于HttpClient+GSON提供集群访问与数据映射,在ES操作易用性方面与Java High Level REST Client部分伯仲，但是其多版本兼容性比后者强很多。虽然使用有龟速之称的GSON切不能替换，但是其性能应该能满足大部分业务场景。</span><br><span class="line">Java-High-Level-REST:很多设计也借鉴了Jest,虽然有严格的版本控制，但有默认的调优参数，其性能会更加优秀。</span><br></pre></td></tr></table></figure>
+<p>在综合考虑之下。选用了Java High Level REST作为java client,毕竟es自己的客户端，更新迭代比jestClient快，而且社区活跃，文档齐全。<a href="https://www.elastic.co/guide/en/elasticsearch/client/java-rest/index.html" target="_blank" rel="noopener">api文档</a></p>
+      
+        
+          <div class="button readmore">
+            <a href="/elasticsearch-high-level-client.html">
+              <i class="fas fa-book-open fa-fw" aria-hidden="true"></i> Read More
+            </a>
+          </div>
+        
+      
+    </div>
+  </section>
+</article>
+
+          </div>
+        
+      
+        
+          <div class='post-wrapper'>
+            <article class="post white-box shadow floatable reveal ">
+  
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  <h2 class="title">
     <a href="/nginx%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98.html">
       nginx本地缓存
     </a>
@@ -491,7 +601,7 @@
   <div class='new-meta-item category'>
     <a href='/categories/amazonaws-s3/' rel="nofollow">
       <i class="fas fa-folder-open" aria-hidden="true"></i>
-      <p>ceph&nbsp;/&nbsp;java&nbsp;/&nbsp;oss&nbsp;/&nbsp;amazonaws s3</p>
+      <p>java&nbsp;/&nbsp;ceph&nbsp;/&nbsp;oss&nbsp;/&nbsp;amazonaws s3</p>
     </a>
   </div>
 
@@ -546,115 +656,6 @@
         
           <div class="button readmore">
             <a href="/%E5%9F%BA%E4%BA%8Eamazonaws-s3%E7%9A%84%E5%88%86%E7%89%87%E4%B8%8A%E4%BC%A0-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0.html">
-              <i class="fas fa-book-open fa-fw" aria-hidden="true"></i> Read More
-            </a>
-          </div>
-        
-      
-    </div>
-  </section>
-</article>
-
-          </div>
-        
-      
-        
-          <div class='post-wrapper'>
-            <article class="post white-box shadow floatable reveal ">
-  
-
-
-  <section class='meta'>
-    
-    
-    <div class="meta" id="header-meta">
-      
-        
-  <h2 class="title">
-    <a href="/netty-ByteBuf%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%87%8A%E6%94%BE.html">
-      netty ByteBuf使用与释放
-    </a>
-  </h2>
-
-
-      
-      <div class='new-meta-box'>
-        
-          
-        
-          
-            
-<div class='new-meta-item author'>
-  <a href="" rel="nofollow">
-    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
-    <p>silly-billy</p>
-  </a>
-</div>
-
-          
-        
-          
-            
-  
-  <div class='new-meta-item category'>
-    <a href='/categories/netty/' rel="nofollow">
-      <i class="fas fa-folder-open" aria-hidden="true"></i>
-      <p>netty</p>
-    </a>
-  </div>
-
-
-          
-        
-          
-            <div class="new-meta-item date">
-  <a class='notlink'>
-    <i class="fas fa-edit" aria-hidden="true"></i>
-    <p>发布于：2020年4月5日</p>
-  </a>
-</div>
-
-          
-        
-          
-            
-  <div class="new-meta-item wordcount">
-    <a class='notlink'>
-      <i class="fas fa-keyboard" aria-hidden="true"></i>
-      <p>字数：2.5k字</p>
-    </a>
-  </div>
-  <div class="new-meta-item readtime">
-    <a class='notlink'>
-      <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-      <p>时长：9分钟</p>
-    </a>
-  </div>
-
-
-          
-        
-          
-            
-
-          
-        
-      </div>
-      
-        <hr>
-      
-    </div>
-  </section>
-
-
-  <section class="article typo">
-    <div class="article-entry" itemprop="articleBody">
-      <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>在了解netty的byteBuf方法之前，我们需要对JVM的内存分配有一定的认知。这里引用网上的一张JVM内存模型图:</p>
-<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/netty/jvm.png" alt="JVM内存模型"></p>
-      
-        
-          <div class="button readmore">
-            <a href="/netty-ByteBuf%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%87%8A%E6%94%BE.html">
               <i class="fas fa-book-open fa-fw" aria-hidden="true"></i> Read More
             </a>
           </div>
@@ -835,6 +836,11 @@
             ><div class='name'>lock</div><div class='badge'>(1)</div></a></li>
         
           <li><a class="flat-box"
+            title="/categories/mysql/" href="/categories/mysql/"
+            id="categoriesmysql"
+            ><div class='name'>mysql</div><div class='badge'>(1)</div></a></li>
+        
+          <li><a class="flat-box"
             title="/categories/netty/" href="/categories/netty/"
             id="categoriesnetty"
             ><div class='name'>netty</div><div class='badge'>(2)</div></a></li>
@@ -891,7 +897,7 @@
 
 
     <div class='content'>
-      <a href="/tags/DirectByteBuffer/" style="font-size: 14px; color: #999">DirectByteBuffer</a> <a href="/tags/JVM/" style="font-size: 14px; color: #999">JVM</a> <a href="/tags/cache/" style="font-size: 14px; color: #999">cache</a> <a href="/tags/ceph/" style="font-size: 19px; color: #777">ceph</a> <a href="/tags/cxf/" style="font-size: 14px; color: #999">cxf</a> <a href="/tags/date/" style="font-size: 14px; color: #999">date</a> <a href="/tags/db/" style="font-size: 14px; color: #999">db</a> <a href="/tags/distributed-lock/" style="font-size: 14px; color: #999">distributed-lock</a> <a href="/tags/elasticsearch/" style="font-size: 14px; color: #999">elasticsearch</a> <a href="/tags/heap/" style="font-size: 14px; color: #999">heap</a> <a href="/tags/java/" style="font-size: 24px; color: #555">java</a> <a href="/tags/jvm/" style="font-size: 14px; color: #999">jvm</a> <a href="/tags/kafka/" style="font-size: 14px; color: #999">kafka</a> <a href="/tags/multi-thread/" style="font-size: 14px; color: #999">multi-thread</a> <a href="/tags/mysql/" style="font-size: 14px; color: #999">mysql</a> <a href="/tags/netty/" style="font-size: 19px; color: #777">netty</a> <a href="/tags/nginx/" style="font-size: 14px; color: #999">nginx</a> <a href="/tags/oss/" style="font-size: 19px; color: #777">oss</a> <a href="/tags/rabbitmq/" style="font-size: 14px; color: #999">rabbitmq</a> <a href="/tags/redis/" style="font-size: 14px; color: #999">redis</a> <a href="/tags/spring/" style="font-size: 14px; color: #999">spring</a> <a href="/tags/springcloudstream/" style="font-size: 14px; color: #999">springcloudstream</a> <a href="/tags/sso/" style="font-size: 14px; color: #999">sso</a> <a href="/tags/tcp/" style="font-size: 14px; color: #999">tcp</a> <a href="/tags/webservice/" style="font-size: 14px; color: #999">webservice</a> <a href="/tags/websocket/" style="font-size: 14px; color: #999">websocket</a> <a href="/tags/xml-http/" style="font-size: 14px; color: #999">xml/http</a> <a href="/tags/zookeeper/" style="font-size: 14px; color: #999">zookeeper</a>
+      <a href="/tags/DirectByteBuffer/" style="font-size: 14px; color: #999">DirectByteBuffer</a> <a href="/tags/JVM/" style="font-size: 14px; color: #999">JVM</a> <a href="/tags/cache/" style="font-size: 14px; color: #999">cache</a> <a href="/tags/ceph/" style="font-size: 19px; color: #777">ceph</a> <a href="/tags/cxf/" style="font-size: 14px; color: #999">cxf</a> <a href="/tags/date/" style="font-size: 14px; color: #999">date</a> <a href="/tags/db/" style="font-size: 14px; color: #999">db</a> <a href="/tags/distributed-lock/" style="font-size: 14px; color: #999">distributed-lock</a> <a href="/tags/elasticsearch/" style="font-size: 14px; color: #999">elasticsearch</a> <a href="/tags/heap/" style="font-size: 14px; color: #999">heap</a> <a href="/tags/java/" style="font-size: 24px; color: #555">java</a> <a href="/tags/jvm/" style="font-size: 14px; color: #999">jvm</a> <a href="/tags/kafka/" style="font-size: 14px; color: #999">kafka</a> <a href="/tags/multi-thread/" style="font-size: 14px; color: #999">multi-thread</a> <a href="/tags/mysql/" style="font-size: 19px; color: #777">mysql</a> <a href="/tags/netty/" style="font-size: 19px; color: #777">netty</a> <a href="/tags/nginx/" style="font-size: 14px; color: #999">nginx</a> <a href="/tags/oss/" style="font-size: 19px; color: #777">oss</a> <a href="/tags/rabbitmq/" style="font-size: 14px; color: #999">rabbitmq</a> <a href="/tags/redis/" style="font-size: 14px; color: #999">redis</a> <a href="/tags/spring/" style="font-size: 14px; color: #999">spring</a> <a href="/tags/springcloudstream/" style="font-size: 14px; color: #999">springcloudstream</a> <a href="/tags/sso/" style="font-size: 14px; color: #999">sso</a> <a href="/tags/tcp/" style="font-size: 14px; color: #999">tcp</a> <a href="/tags/webservice/" style="font-size: 14px; color: #999">webservice</a> <a href="/tags/websocket/" style="font-size: 14px; color: #999">websocket</a> <a href="/tags/xml-http/" style="font-size: 14px; color: #999">xml/http</a> <a href="/tags/zookeeper/" style="font-size: 14px; color: #999">zookeeper</a>
     </div>
   </section>
 

@@ -355,6 +355,115 @@
       
         
   <h2 class="title">
+    <a href="/netty-ByteBuf%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%87%8A%E6%94%BE.html">
+      netty ByteBuf使用与释放
+    </a>
+  </h2>
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/netty/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>netty</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2020年4月5日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  <div class="new-meta-item wordcount">
+    <a class='notlink'>
+      <i class="fas fa-keyboard" aria-hidden="true"></i>
+      <p>字数：2.5k字</p>
+    </a>
+  </div>
+  <div class="new-meta-item readtime">
+    <a class='notlink'>
+      <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+      <p>时长：9分钟</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+  <section class="article typo">
+    <div class="article-entry" itemprop="articleBody">
+      <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>在了解netty的byteBuf方法之前，我们需要对JVM的内存分配有一定的认知。这里引用网上的一张JVM内存模型图:</p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/netty/jvm.png" alt="JVM内存模型"></p>
+      
+        
+          <div class="button readmore">
+            <a href="/netty-ByteBuf%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%87%8A%E6%94%BE.html">
+              <i class="fas fa-book-open fa-fw" aria-hidden="true"></i> Read More
+            </a>
+          </div>
+        
+      
+    </div>
+  </section>
+</article>
+
+          </div>
+        
+      
+        
+          <div class='post-wrapper'>
+            <article class="post white-box shadow floatable reveal ">
+  
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  <h2 class="title">
     <a href="/springcloudstream-%E9%9B%86%E6%88%90kafka%E5%92%8Crabbitmq.html">
       springcloudstream 集成kafka和rabbitmq
     </a>
@@ -561,116 +670,6 @@
           </div>
         
       
-        
-          <div class='post-wrapper'>
-            <article class="post white-box shadow floatable reveal ">
-  
-
-
-  <section class='meta'>
-    
-    
-    <div class="meta" id="header-meta">
-      
-        
-  <h2 class="title">
-    <a href="/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html">
-      java8之CompletableFuture初识
-    </a>
-  </h2>
-
-
-      
-      <div class='new-meta-box'>
-        
-          
-        
-          
-            
-<div class='new-meta-item author'>
-  <a href="" rel="nofollow">
-    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
-    <p>silly-billy</p>
-  </a>
-</div>
-
-          
-        
-          
-            
-  
-  <div class='new-meta-item category'>
-    <a href='/categories/java/' rel="nofollow">
-      <i class="fas fa-folder-open" aria-hidden="true"></i>
-      <p>java</p>
-    </a>
-  </div>
-
-
-          
-        
-          
-            <div class="new-meta-item date">
-  <a class='notlink'>
-    <i class="fas fa-edit" aria-hidden="true"></i>
-    <p>发布于：2020年3月24日</p>
-  </a>
-</div>
-
-          
-        
-          
-            
-  <div class="new-meta-item wordcount">
-    <a class='notlink'>
-      <i class="fas fa-keyboard" aria-hidden="true"></i>
-      <p>字数：1.9k字</p>
-    </a>
-  </div>
-  <div class="new-meta-item readtime">
-    <a class='notlink'>
-      <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-      <p>时长：8分钟</p>
-    </a>
-  </div>
-
-
-          
-        
-          
-            
-
-          
-        
-      </div>
-      
-        <hr>
-      
-    </div>
-  </section>
-
-
-  <section class="article typo">
-    <div class="article-entry" itemprop="articleBody">
-      <h2 id="提要"><a href="#提要" class="headerlink" title="提要"></a>提要</h2><p>在jdk5中增加了很多新的并发处理机制，对于多线程处理有了很大的优化。我们通常会选择通过Future接口构建异步的应用，因为在之前的多线程的实现中，不管是继承thread类还是实现runnable接口，都无法保证获取到之前的执行结果。我们现在可以通过实现Callable接口，并用Future来接收多线程的执行结果。</p>
-<h2 id="Callable处理demo"><a href="#Callable处理demo" class="headerlink" title="Callable处理demo"></a>Callable处理demo</h2><p>通过kafka多线程消费举个例子(伪代码):</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(<span class="keyword">int</span> threads)</span> </span>&#123;</span><br><span class="line">	<span class="comment">//threads核心数 10-最大线程数 0L-空闲等待时间</span></span><br><span class="line">	<span class="keyword">var</span> executors = <span class="keyword">new</span> ThreadPoolExecutor(threads, <span class="number">10</span>, <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">	<span class="keyword">new</span> ArrayBlockingQueue(<span class="number">1000</span>), <span class="keyword">new</span> ThreadPoolExecutor.CallerRunsPolicy());</span><br><span class="line"><span class="comment">//启动一个子线程来监听消息</span></span><br><span class="line">	Thread t = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">		<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">		<span class="comment">/*采用循环不断从kafka里捞数据*/</span></span><br><span class="line">			ConsumerRecords&lt;String, String&gt; records = <span class="comment">//todo 返回数据;</span></span><br><span class="line">			List&lt;Callable&lt;String&gt;&gt; consumerWork = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">final</span> ConsumerRecord record : records) &#123;</span><br><span class="line">				consumerWork.add(writeData(record));</span><br><span class="line">			&#125;</span><br><span class="line">			List&lt;Future&lt;String&gt;&gt; futures = executors.invokeAll(consumerWork);</span><br><span class="line">			<span class="comment">//拿到futures结果</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">			log.error(<span class="string">"Test.execute()-&gt;&#123;&#125;"</span>,e);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;);</span><br><span class="line">	t.start();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-      
-        
-          <div class="button readmore">
-            <a href="/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html">
-              <i class="fas fa-book-open fa-fw" aria-hidden="true"></i> Read More
-            </a>
-          </div>
-        
-      
-    </div>
-  </section>
-</article>
-
-          </div>
-        
-      
     
   </section>
   
@@ -839,6 +838,11 @@
             ><div class='name'>lock</div><div class='badge'>(1)</div></a></li>
         
           <li><a class="flat-box"
+            title="/categories/mysql/" href="/categories/mysql/"
+            id="categoriesmysql"
+            ><div class='name'>mysql</div><div class='badge'>(1)</div></a></li>
+        
+          <li><a class="flat-box"
             title="/categories/netty/" href="/categories/netty/"
             id="categoriesnetty"
             ><div class='name'>netty</div><div class='badge'>(2)</div></a></li>
@@ -895,7 +899,7 @@
 
 
     <div class='content'>
-      <a href="/tags/DirectByteBuffer/" style="font-size: 14px; color: #999">DirectByteBuffer</a> <a href="/tags/JVM/" style="font-size: 14px; color: #999">JVM</a> <a href="/tags/cache/" style="font-size: 14px; color: #999">cache</a> <a href="/tags/ceph/" style="font-size: 19px; color: #777">ceph</a> <a href="/tags/cxf/" style="font-size: 14px; color: #999">cxf</a> <a href="/tags/date/" style="font-size: 14px; color: #999">date</a> <a href="/tags/db/" style="font-size: 14px; color: #999">db</a> <a href="/tags/distributed-lock/" style="font-size: 14px; color: #999">distributed-lock</a> <a href="/tags/elasticsearch/" style="font-size: 14px; color: #999">elasticsearch</a> <a href="/tags/heap/" style="font-size: 14px; color: #999">heap</a> <a href="/tags/java/" style="font-size: 24px; color: #555">java</a> <a href="/tags/jvm/" style="font-size: 14px; color: #999">jvm</a> <a href="/tags/kafka/" style="font-size: 14px; color: #999">kafka</a> <a href="/tags/multi-thread/" style="font-size: 14px; color: #999">multi-thread</a> <a href="/tags/mysql/" style="font-size: 14px; color: #999">mysql</a> <a href="/tags/netty/" style="font-size: 19px; color: #777">netty</a> <a href="/tags/nginx/" style="font-size: 14px; color: #999">nginx</a> <a href="/tags/oss/" style="font-size: 19px; color: #777">oss</a> <a href="/tags/rabbitmq/" style="font-size: 14px; color: #999">rabbitmq</a> <a href="/tags/redis/" style="font-size: 14px; color: #999">redis</a> <a href="/tags/spring/" style="font-size: 14px; color: #999">spring</a> <a href="/tags/springcloudstream/" style="font-size: 14px; color: #999">springcloudstream</a> <a href="/tags/sso/" style="font-size: 14px; color: #999">sso</a> <a href="/tags/tcp/" style="font-size: 14px; color: #999">tcp</a> <a href="/tags/webservice/" style="font-size: 14px; color: #999">webservice</a> <a href="/tags/websocket/" style="font-size: 14px; color: #999">websocket</a> <a href="/tags/xml-http/" style="font-size: 14px; color: #999">xml/http</a> <a href="/tags/zookeeper/" style="font-size: 14px; color: #999">zookeeper</a>
+      <a href="/tags/DirectByteBuffer/" style="font-size: 14px; color: #999">DirectByteBuffer</a> <a href="/tags/JVM/" style="font-size: 14px; color: #999">JVM</a> <a href="/tags/cache/" style="font-size: 14px; color: #999">cache</a> <a href="/tags/ceph/" style="font-size: 19px; color: #777">ceph</a> <a href="/tags/cxf/" style="font-size: 14px; color: #999">cxf</a> <a href="/tags/date/" style="font-size: 14px; color: #999">date</a> <a href="/tags/db/" style="font-size: 14px; color: #999">db</a> <a href="/tags/distributed-lock/" style="font-size: 14px; color: #999">distributed-lock</a> <a href="/tags/elasticsearch/" style="font-size: 14px; color: #999">elasticsearch</a> <a href="/tags/heap/" style="font-size: 14px; color: #999">heap</a> <a href="/tags/java/" style="font-size: 24px; color: #555">java</a> <a href="/tags/jvm/" style="font-size: 14px; color: #999">jvm</a> <a href="/tags/kafka/" style="font-size: 14px; color: #999">kafka</a> <a href="/tags/multi-thread/" style="font-size: 14px; color: #999">multi-thread</a> <a href="/tags/mysql/" style="font-size: 19px; color: #777">mysql</a> <a href="/tags/netty/" style="font-size: 19px; color: #777">netty</a> <a href="/tags/nginx/" style="font-size: 14px; color: #999">nginx</a> <a href="/tags/oss/" style="font-size: 19px; color: #777">oss</a> <a href="/tags/rabbitmq/" style="font-size: 14px; color: #999">rabbitmq</a> <a href="/tags/redis/" style="font-size: 14px; color: #999">redis</a> <a href="/tags/spring/" style="font-size: 14px; color: #999">spring</a> <a href="/tags/springcloudstream/" style="font-size: 14px; color: #999">springcloudstream</a> <a href="/tags/sso/" style="font-size: 14px; color: #999">sso</a> <a href="/tags/tcp/" style="font-size: 14px; color: #999">tcp</a> <a href="/tags/webservice/" style="font-size: 14px; color: #999">webservice</a> <a href="/tags/websocket/" style="font-size: 14px; color: #999">websocket</a> <a href="/tags/xml-http/" style="font-size: 14px; color: #999">xml/http</a> <a href="/tags/zookeeper/" style="font-size: 14px; color: #999">zookeeper</a>
     </div>
   </section>
 
