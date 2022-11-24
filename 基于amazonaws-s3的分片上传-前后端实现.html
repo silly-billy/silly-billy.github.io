@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html>
+<head hexo-theme='https://volantis.js.org/#blog'>
+  <meta charset="utf-8">
+  <!-- SEO相关 -->
+  
+    
+  
+  <!-- 渲染优化 -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- 页面元数据 -->
+  
+    <title>基于amazonaws s3的分片上传(前后端实现) - 微笑流浪</title>
+  
+    <meta name="keywords" content="java,ceph,oss">
+  
+  
+    <meta name="description" content="前提s3对象存储在单个操作上文件上传的最大值为5个G，所以对于大文件的上传肯定需要使用分片功能。使用分段上传可提供以下优势：1、提高吞吐量 – 可以并行上传分段以提高吞吐量。2、从任何网络问题中快速恢复 - 由于网络原因导致的上传失败，分段的操作可以避免文件再次全量上传，提高上传效率。3、暂停和恢复对象上传 – ...">
+  
+
+  <!-- feed -->
+  
+
+  <!-- import meta -->
+  
+
+  <!-- link -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css">
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10/dist/APlayer.min.css">
+  
+
+  <!-- import link -->
+  
+
+  <link rel="shortcut icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/favicon.ico">
+
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/style.css">
+
+  
+
+  <script>
+    function setLoadingBarProgress(num) {
+      document.getElementById('loading-bar').style.width=num+"%";
+    }
+  </script>
+
+  
+  
+</head>
+
+<body>
+  
+  <div id="loading-bar-wrapper">
+  <div id="loading-bar"></div>
+</div>
+<header class="l_header shadow floatable">
+
+  <div class='wrapper'>
+    <div class='nav-sub container--flex'>
+      <a class="logo flat-box"></a>
+      <ul class='switcher h-list'>
+        <li><a class="s-comment flat-btn fas fa-comments fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+          <li><a class="s-toc flat-btn fas fa-list fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+      </ul>
+    </div>
+		<div class="nav-main container container--flex">
+      
+        
+        <a class="logo flat-box" target="_self" href='/'>
+          
+          
+          
+          
+            SILLY-BILLY'S <b><sup style='color:#3AA757'>blog</sup></b>
+          
+        </a>
+      
+
+			<div class='menu navigation'>
+				<ul class='h-list'>
+          
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/
+                  
+                  
+                  
+                    id="home"
+                  >
+                  
+                    <i class='fas fa-home fa-fw fa-fw'></i>
+                  
+                  主页
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/categories/
+                  
+                  
+                  
+                    id="categories"
+                  >
+                  
+                    <i class='fas fa-folder-open fa-fw'></i>
+                  
+                  分类
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/tags/
+                  
+                  
+                  
+                    id="tags"
+                  >
+                  
+                    <i class='fas fa-tags fa-fw'></i>
+                  
+                  标签
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/archives/
+                  
+                  
+                  
+                    id="archives"
+                  >
+                  
+                    <i class='fas fa-archive fa-fw'></i>
+                  
+                  归档
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/404.html
+                  
+                  
+                  
+                    id="404html"
+                  >
+                  
+                    <i class='fas fa-link fa-fw'></i>
+                  
+                  友链
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/about/
+                  
+                  
+                  
+                    id="about"
+                  >
+                  
+                    <i class='fas fa-info-circle fa-fw'></i>
+                  
+                  关于
+                </a>
+                
+              </li>
+            
+          
+          
+				</ul>
+			</div>
+
+      
+        <div class="m_search">
+          <form name="searchform" class="form u-search-form">
+            <i class="icon fas fa-search fa-fw"></i>
+            <input type="text" class="input u-search-input" placeholder="搜索" />
+          </form>
+        </div>
+      
+
+			<ul class='switcher h-list'>
+				
+					<li><a class="s-search flat-btn fas fa-search fa-fw" target="_self" href='javascript:void(0)'></a></li>
+				
+				<li><a class="s-menu flat-btn fas fa-bars fa-fw" target="_self" href='javascript:void(0)'></a></li>
+			</ul>
+		</div>
+	</div>
+</header>
+<ul class="menu-phone navigation white-box">
+  
+  
+    <li>
+      <a class="flat-box" href=/
+        
+        
+        
+          id="home"
+        >
+        
+          <i class='fas fa-rss fa-fw'></i>
+        
+        博客
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/categories/
+        
+        
+        
+          id="categories"
+        >
+        
+          <i class='fas fa-folder-open fa-fw'></i>
+        
+        分类
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/tags/
+        
+        
+        
+          id="tags"
+        >
+        
+          <i class='fas fa-tags fa-fw'></i>
+        
+        标签
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/archives/
+        
+        
+        
+          id="archives"
+        >
+        
+          <i class='fas fa-archive fa-fw'></i>
+        
+        归档
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/404.html
+        
+        
+        
+          id="404html"
+        >
+        
+          <i class='fas fa-link fa-fw'></i>
+        
+        友链
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/about/
+        
+        
+        
+          id="about"
+        >
+        
+          <i class='fas fa-info-circle fa-fw'></i>
+        
+        关于
+      </a>
+    </li>
+  
+</ul>
+<script>setLoadingBarProgress(40);</script>
+
+
+
+  <div class="l_body nocover">
+    <div class='body-wrapper'>
+      
+
+<div class='l_main'>
+  
+
+  
+    <article id="post" class="post white-box shadow floatable article-type-post" itemscope itemprop="blogPost">
+      
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  
+    <h1 class="title">
+      <a href="/%E5%9F%BA%E4%BA%8Eamazonaws-s3%E7%9A%84%E5%88%86%E7%89%87%E4%B8%8A%E4%BC%A0-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0.html">
+        基于amazonaws s3的分片上传(前后端实现)
+      </a>
+    </h1>
+  
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/amazonaws-s3/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>java&nbsp;/&nbsp;ceph&nbsp;/&nbsp;oss&nbsp;/&nbsp;amazonaws s3</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2020年4月8日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+      <section class="article typo">
+        <div class="article-entry" itemprop="articleBody">
+          
+          <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>s3对象存储在单个操作上文件上传的最大值为5个G，所以对于大文件的上传肯定需要使用分片功能。<br>使用分段上传可提供以下优势：<br>1、提高吞吐量 – 可以并行上传分段以提高吞吐量。<br>2、从任何网络问题中快速恢复 - 由于网络原因导致的上传失败，分段的操作可以避免文件再次全量上传，提高上传效率。<br>3、暂停和恢复对象上传 – 启动分段上传后，在一段时间内逐步上传对象分段，不存在过期期限，所以可以显式地完成或中止分段上传。<br>4、在不知道对象大小的情况前就可以开始上传 – 您可以在创建对象时将其上传。<br>s3推荐启动分段上传的阈值为100M,可以根据业务需求自己定义。基本的对象操作官网示例demo:<a href="https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/dev/UploadingObjects.html" target="_blank" rel="noopener">s3开发人员指南</a>。</p>
+<a id="more"></a>
+
+<h2 id="分片上传实现"><a href="#分片上传实现" class="headerlink" title="分片上传实现"></a>分片上传实现</h2><h3 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h3><p>新建一个springboot+thymeleaf工程，并添加相关jar包</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;lombok&lt;/artifactId&gt;</span><br><span class="line">    &lt;optional&gt;true&lt;/optional&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">     &lt;groupId&gt;org.apache.commons&lt;/groupId&gt;</span><br><span class="line">     &lt;artifactId&gt;commons-lang3&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;3.9&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">        &lt;!-- AmazonS3对象存储 --&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.amazonaws&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;aws-java-sdk-s3&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.11.592&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.amazonaws&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;aws-java-sdk-core&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.11.592&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;com.google.guava&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;guava&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;27.0.1-jre&lt;/version&gt;</span><br><span class="line">    &lt;!-- thymeleaf --&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">        &lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-boot-starter-thymeleaf&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;commons-fileupload&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;commons-fileupload&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;1.4&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+<p>yml文件配置thymeleaf和开放字节上传限制</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">server:</span><br><span class="line">  port: 8090</span><br><span class="line"></span><br><span class="line">spring:</span><br><span class="line">  thymeleaf:</span><br><span class="line">    prefix: classpath:&#x2F;templates&#x2F;</span><br><span class="line">    suffix: .html</span><br><span class="line">  devtools:</span><br><span class="line">    restart:</span><br><span class="line">      #需要实时更新的目录</span><br><span class="line">      additional-paths: resources&#x2F;**,static&#x2F;**,templates&#x2F;**</span><br><span class="line">  servlet:</span><br><span class="line">    multipart:</span><br><span class="line">      max-file-size: 4096MB</span><br><span class="line">      max-request-size: 4096MB</span><br></pre></td></tr></table></figure>
+<h3 id="后端接口实现"><a href="#后端接口实现" class="headerlink" title="后端接口实现"></a>后端接口实现</h3><p>定义一个s3接口类,预定义出一些方法用于Controller层调用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">AwsS3Service</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 大文件分片上传 max-5TB 每段最小5MB</span></span><br><span class="line"><span class="comment">     * 建议100MB以上文件上传启动分段</span></span><br><span class="line"><span class="comment">     * 在上传期间更改分段的大小或者事先不知道上传的数据大小的情况下用此方法</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> id 文件id</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key 桶键</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> file 分片文件内容</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> chunks 总分片数</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> chunk 当前分片</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">uploadAppenderFile</span><span class="params">(String id,String key, MultipartFile file,<span class="keyword">int</span> chunks,<span class="keyword">int</span> chunk)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 默认建议使用此方法</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> stream 上传源文件</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">uploadByTransferManager</span><span class="params">(String key,InputStream stream,<span class="keyword">long</span> length)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>s3有两种分段上传方式，一种是高级API即第二种实现(这里可以直接去操作指南看)，另一种是低级API即第一种实现，这里用第一种方式，因为数据的分片是前端来做。</p>
+<p>接口实现的处理（第一种）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AwsS3ServiceImpl</span> <span class="keyword">implements</span> <span class="title">AwsS3Service</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> AmazonawsS3utils amazonawsS3utils;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">uploadAppenderFile</span><span class="params">(String id, String key, MultipartFile file, <span class="keyword">int</span> chunks, <span class="keyword">int</span> chunk)</span> </span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = amazonawsS3utils.getConnection();</span><br><span class="line">        String bucketName = amazonawsS3utils.getBucketName();</span><br><span class="line"></span><br><span class="line">        String uploadId = PartETagsCacheUtils.getUploadId(id,bucketName,key,amazonS3);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            BufferedInputStream stream = <span class="keyword">new</span> BufferedInputStream(file.getInputStream());</span><br><span class="line">            <span class="keyword">long</span> partSize = file.getSize();</span><br><span class="line">            <span class="comment">//上传请求参数设置 必需参数：BucketName，Key，UploadId，PartNumber，PartSize(partNumber between 1 and 10,000)</span></span><br><span class="line">            UploadPartRequest partRequest = <span class="keyword">new</span> UploadPartRequest()</span><br><span class="line">                    .withBucketName(bucketName)</span><br><span class="line">                    .withKey(key)</span><br><span class="line">                    .withUploadId(uploadId)</span><br><span class="line">                    .withPartNumber(chunk + <span class="number">1</span>)</span><br><span class="line">                    .withPartSize(partSize)</span><br><span class="line">                    .withInputStream(stream);</span><br><span class="line">            <span class="comment">//配置最大缓冲区大小</span></span><br><span class="line">            partRequest.getRequestClientOptions().setReadLimit(<span class="number">1024</span> * <span class="number">1024</span> * <span class="number">100</span>);</span><br><span class="line">            <span class="comment">//partRequest.setGeneralProgressListener(progressEvent -&gt; log.info("data upload:&#123;&#125;", progressEvent.getBytesTransferred()));</span></span><br><span class="line">            UploadPartResult uploadResult = amazonS3.uploadPart(partRequest);</span><br><span class="line">            PartETagsCacheUtils.addPartETag(id, uploadResult.getPartETag());</span><br><span class="line">            List&lt;PartETag&gt; partETags = PartETagsCacheUtils.getPartETags(id);</span><br><span class="line">            <span class="comment">//完成上传</span></span><br><span class="line">            <span class="keyword">if</span> (partETags.size == chunks)&#123;</span><br><span class="line">                </span><br><span class="line">                CompleteMultipartUploadRequest compRequest = <span class="keyword">new</span> CompleteMultipartUploadRequest(bucketName, key, uploadId, partETags);</span><br><span class="line">                amazonS3.completeMultipartUpload(compRequest);</span><br><span class="line">                PartETagsCacheUtils.cleanCache(id);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            log.info(<span class="string">"IO异常,&#123;&#125;"</span>, e.getMessage());</span><br><span class="line">            PartETagsCacheUtils.cleanCache(id);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (SdkClientException e) &#123;</span><br><span class="line">            <span class="comment">//终止分段上传</span></span><br><span class="line">            amazonS3.abortMultipartUpload(<span class="keyword">new</span> AbortMultipartUploadRequest(bucketName, key, uploadId));</span><br><span class="line">            log.info(<span class="string">"Failed to upload, &#123;&#125;"</span>, e.getMessage());</span><br><span class="line">            PartETagsCacheUtils.cleanCache(id);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>AmazonawsS3utils类可以参考之前的内容（差不多）(<a href="https://sillybilly-share.top/ceph%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8-amasonaws-s3-api%E9%AA%8C%E8%AF%81.html">api验证</a>),PartETagsCacheUtils类用于缓存分段上传的PartETag以及不同文件上传的uploadId。简单的实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>:      sillybilly</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>:        2020/4/8 16:17</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 分段上传信息本地缓存</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Version</span>:     1.0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PartETagsCacheUtils</span> </span>&#123;</span><br><span class="line">    <span class="comment">//创建一个列表保存某个文件所有分段的 PartETag</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Map&lt;String, List&lt;PartETag&gt;&gt; partETagList = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line">    <span class="comment">//分段上传&lt;文件id，uploadId&gt;</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Map&lt;String,String&gt; uploadIds = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">addPartETag</span><span class="params">(String id, PartETag partETag)</span> </span>&#123;</span><br><span class="line">        List&lt;PartETag&gt; partETags = partETagList.get(id);</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> == partETags)&#123;</span><br><span class="line">            partETags = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        &#125;</span><br><span class="line">        partETags.add(partETag);</span><br><span class="line">        partETagList.put(id,partETags);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> List&lt;PartETag&gt; <span class="title">getPartETags</span><span class="params">(String id)</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> partETagList.get(id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">cleanCache</span><span class="params">(String id)</span></span>&#123;</span><br><span class="line">        partETagList.remove(id);</span><br><span class="line">        uploadIds.remove(id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> String <span class="title">getUploadId</span><span class="params">(String id, String bucketName, String key, AmazonS3 amazonS3)</span></span>&#123;</span><br><span class="line">        String uploadId = uploadIds.get(id);</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span> == uploadId)&#123;</span><br><span class="line">            InitiateMultipartUploadRequest initRequest = <span class="keyword">new</span> InitiateMultipartUploadRequest(bucketName, key)</span><br><span class="line">                    .withCannedACL(CannedAccessControlList.PublicRead);</span><br><span class="line">            <span class="comment">//启动分段上传，并返回包含上传ID的InitiateMultipartUploadResult</span></span><br><span class="line">            InitiateMultipartUploadResult initResult = amazonS3.initiateMultipartUpload(initRequest);</span><br><span class="line">            uploadId = initResult.getUploadId();</span><br><span class="line">            uploadIds.put(id,uploadId);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> uploadId;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后就可以用Controller层去调用该方法了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AwsS3Controller</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> AwsS3Service awsS3Service;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PostMapping</span>(value = <span class="string">"/uploadAppenderFile"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">uploadAppenderFile</span><span class="params">(DataUploadVO dataUploadVO)</span> <span class="keyword">throws</span> IOException</span>&#123;</span><br><span class="line">        log.info(<span class="string">"开启分段信息：&#123;&#125;"</span>,dataUploadVO.toString());</span><br><span class="line">        String key = dataUploadVO.getName();</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">null</span>==dataUploadVO.getChunks())&#123;</span><br><span class="line">            <span class="comment">//todo 不走分片</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">int</span> chunks = Integer.parseInt(dataUploadVO.getChunks());</span><br><span class="line">        <span class="keyword">int</span> chunk = Integer.parseInt(dataUploadVO.getChunk());</span><br><span class="line">        MultipartFile file = dataUploadVO.getFile();</span><br><span class="line">        String id = dataUploadVO.getId();</span><br><span class="line">        awsS3Service.uploadAppenderFile(id,key,file,chunks,chunk);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>DataUploadVO封装了前端发送的数据：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DataUploadVO</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//当前文件id 文件ID，如WU_FILE_1，后面数字代表当前传的是第几个文件,后续使用此ID来创建临时目录，将属于该文件ID的所有分片全部放在同一个文件夹中</span></span><br><span class="line">    String id;</span><br><span class="line">    <span class="comment">//当前所传文件的分片总数</span></span><br><span class="line">    String chunks;</span><br><span class="line">    <span class="comment">//当前所传文件的当前分片数</span></span><br><span class="line">    String chunk;</span><br><span class="line">    <span class="comment">//文件名称，如07-中文分词器和业务域的配置.avi</span></span><br><span class="line">    String name;</span><br><span class="line">    <span class="comment">//当前所传分片数据</span></span><br><span class="line">    MultipartFile file;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">     <span class="comment">//* 可选参数</span></span><br><span class="line">     <span class="comment">//* guid 可省略；每个文件有自己唯一的guid，后续测试中发现，每个分片也有自己的guid，所以不能使用guid来确定分片属于哪个文件。</span></span><br><span class="line">     <span class="comment">//* md5value 文件的MD5值</span></span><br><span class="line">     <span class="comment">//* type 文件类型，可选，在这里没有用到</span></span><br><span class="line">     <span class="comment">//* lastModifiedDate 文件修改日期，可选，在这里没有用到</span></span><br><span class="line">     <span class="comment">//* size  当前所传分片大小，可选，没有用到</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当然100兆以下的文件不走分片，chunks为null,可以直接调用putObject上传数据。</p>
+<h3 id="前端实现"><a href="#前端实现" class="headerlink" title="前端实现"></a>前端实现</h3><p>这里主要用前端将数据包分片传给我们的oss服务器，所以我选择了百度的webupload插件，地址：<a href="http://fex.baidu.com/webuploader/doc/" target="_blank" rel="noopener">webupload官网</a>，我们可以使用staticfile提供的cdn版本，或者下载源码放在自己的项目中，这里我们直接下载放入自己的项目中。然后根据thymeleaf模板的方式引入资源。<br>upload.html:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">"en"</span> <span class="attr">xmlns:th</span>=<span class="string">"http://www.thymeleaf.org"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>Title<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--引入CSS--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">type</span>=<span class="string">"text/css"</span> <span class="attr">th:href</span>=<span class="string">"@&#123;css/webuploader.css&#125;"</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--引入JS--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"https://code.jquery.com/jquery-3.1.1.min.js"</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span> <span class="attr">th:src</span>=<span class="string">"@&#123;js/webuploader.js&#125;"</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- Main content --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">section</span> <span class="attr">class</span>=<span class="string">"content"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"container"</span> <span class="attr">style</span>=<span class="string">"margin-top: 20px"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"alert alert-info"</span>&gt;</span><span class="tag">&lt;<span class="name">h1</span>&gt;</span>大文件上传<span class="tag">&lt;/<span class="name">h1</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"container"</span> <span class="attr">style</span>=<span class="string">"margin-top: 50px"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"uploader"</span> <span class="attr">class</span>=<span class="string">"container"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"container"</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"fileList"</span> <span class="attr">class</span>=<span class="string">"uploader-list"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">                <span class="comment">&lt;!--存放文件的容器--&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"btns container"</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"picker"</span> <span class="attr">class</span>=<span class="string">"webuploader-container"</span></span></span><br><span class="line"><span class="tag">                     <span class="attr">style</span>=<span class="string">"float: left; margin-right: 10px"</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">                        选择文件 <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">name</span>=<span class="string">"file"</span></span></span><br><span class="line"><span class="tag">                                    <span class="attr">class</span>=<span class="string">"webuploader-element-invisible"</span> <span class="attr">multiple</span>=<span class="string">"multiple"</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"UploadBtn"</span> <span class="attr">class</span>=<span class="string">"webuploader-pick"</span></span></span><br><span class="line"><span class="tag">                     <span class="attr">style</span>=<span class="string">"float: left; margin-right: 10px"</span>&gt;</span>开始上传<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"StopBtn"</span> <span class="attr">class</span>=<span class="string">"webuploader-pick"</span></span></span><br><span class="line"><span class="tag">                     <span class="attr">style</span>=<span class="string">"float: left; margin-right: 10px"</span> <span class="attr">status</span>=<span class="string">"suspend"</span>&gt;</span>暂停上传<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">"text/javascript"</span>&gt;</span></span><br><span class="line"><span class="javascript">    $(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">        $list = $(<span class="string">'#fileList'</span>);</span></span><br><span class="line"><span class="actionscript">        <span class="keyword">var</span> flie_count = <span class="number">0</span>;</span></span><br><span class="line"><span class="actionscript">        <span class="keyword">var</span> uploader = WebUploader.create(&#123;</span></span><br><span class="line"><span class="actionscript">            <span class="comment">//设置选完文件后是否自动上传</span></span></span><br><span class="line"><span class="actionscript">            auto: <span class="literal">false</span>,</span></span><br><span class="line"><span class="actionscript">            <span class="comment">//swf文件路径</span></span></span><br><span class="line"><span class="actionscript">            swf: <span class="string">'js/Uploader.swf'</span>,</span></span><br><span class="line"><span class="actionscript">            <span class="comment">// 文件接收服务端。</span></span></span><br><span class="line"><span class="actionscript">            server: <span class="string">'/uploadAppenderFile'</span>,</span></span><br><span class="line"><span class="actionscript">            <span class="comment">// 选择文件的按钮。可选。</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">// 内部根据当前运行是创建，可能是input元素，也可能是flash.</span></span></span><br><span class="line"><span class="actionscript">            pick: <span class="string">'#picker'</span>,</span></span><br><span class="line"><span class="actionscript">            chunked: <span class="literal">true</span>, <span class="comment">//开启分块上传</span></span></span><br><span class="line">            chunkSize: 10 * 1024 * 1024,</span><br><span class="line"><span class="actionscript">            chunkRetry: <span class="number">3</span>,<span class="comment">//网络问题上传失败后重试次数</span></span></span><br><span class="line"><span class="actionscript">            threads: <span class="number">5</span>, <span class="comment">//上传并发数</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//fileNumLimit :1,</span></span></span><br><span class="line"><span class="actionscript">            fileSizeLimit: <span class="number">5000</span> * <span class="number">1024</span> * <span class="number">1024</span>,<span class="comment">//总文件大小</span></span></span><br><span class="line"><span class="actionscript">            fileSingleSizeLimit: <span class="number">3000</span> * <span class="number">1024</span> * <span class="number">1024</span>, <span class="comment">//单个文件最大值</span></span></span><br><span class="line"><span class="actionscript">            resize: <span class="literal">false</span><span class="comment">//不压缩</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//选择文件类型</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//accept: &#123;</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//    title: 'Video',</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//    extensions: 'mp4,avi',</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//    mimeTypes: 'video/*'</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//&#125;</span></span></span><br><span class="line">        &#125;);</span><br><span class="line"><span class="actionscript">        <span class="comment">// 当有文件被添加进队列的时候</span></span></span><br><span class="line"><span class="actionscript">        uploader.on(<span class="string">'fileQueued'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(file)</span> </span>&#123;</span></span><br><span class="line"><span class="handlebars"><span class="xml">            $list.append('<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"' + file.id + '"</span> <span class="attr">class</span>=<span class="string">"item"</span>&gt;</span>' +</span></span></span><br><span class="line"><span class="handlebars"><span class="xml">                '<span class="tag">&lt;<span class="name">h4</span> <span class="attr">class</span>=<span class="string">"info"</span>&gt;</span>' + file.name + '<span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">fileId</span>=<span class="string">"' + file.id + '"</span> <span class="attr">class</span>=<span class="string">"btn btn-danger btn-delete"</span>&gt;</span><span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"glyphicon glyphicon-trash"</span>&gt;</span>取消<span class="tag">&lt;/<span class="name">span</span>&gt;</span><span class="tag">&lt;/<span class="name">button</span>&gt;</span><span class="tag">&lt;/<span class="name">h4</span>&gt;</span>' +</span></span></span><br><span class="line"><span class="handlebars"><span class="xml">                '<span class="tag">&lt;<span class="name">p</span> <span class="attr">class</span>=<span class="string">"state"</span>&gt;</span>正在计算文件MD5...请等待计算完毕后再点击上传！<span class="tag">&lt;/<span class="name">p</span>&gt;</span>' +</span></span></span><br><span class="line"><span class="actionscript">                <span class="string">'&lt;/div&gt;'</span>);</span></span><br><span class="line"><span class="javascript">            <span class="built_in">console</span>.info(<span class="string">"id=file_"</span>+flie_count);</span></span><br><span class="line">            flie_count++;</span><br><span class="line"></span><br><span class="line"><span class="actionscript">            <span class="comment">//删除要上传的文件</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//每次添加文件都给btn-delete绑定删除方法</span></span></span><br><span class="line"><span class="javascript">            $(<span class="string">".btn-delete"</span>).click(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="actionscript">                <span class="comment">//console.log($(this).attr("fileId"));//拿到文件id</span></span></span><br><span class="line"><span class="javascript">                uploader.removeFile(uploader.getFile($(<span class="keyword">this</span>).attr(<span class="string">"fileId"</span>), <span class="literal">true</span>));</span></span><br><span class="line"><span class="javascript">                $(<span class="keyword">this</span>).parent().parent().fadeOut();<span class="comment">//视觉上消失了</span></span></span><br><span class="line"><span class="javascript">                $(<span class="keyword">this</span>).parent().parent().remove();<span class="comment">//DOM上删除了</span></span></span><br><span class="line">            &#125;);</span><br><span class="line"><span class="actionscript">            <span class="comment">//uploader.options.formData.guid = WebUploader.guid();//每个文件都附带一个guid，以在服务端确定哪些文件块本来是一个</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//console.info("guid= "+WebUploader.guid());</span></span></span><br><span class="line"></span><br><span class="line"><span class="actionscript">            <span class="comment">//md5计算</span></span></span><br><span class="line">            uploader.md5File(file)</span><br><span class="line"><span class="actionscript">                .progress(<span class="function"><span class="keyword">function</span><span class="params">(percentage)</span> </span>&#123;</span></span><br><span class="line"><span class="javascript">                    <span class="built_in">console</span>.log(<span class="string">'Percentage:'</span>, percentage);</span></span><br><span class="line">                &#125;)</span><br><span class="line"><span class="actionscript">                <span class="comment">// 完成</span></span></span><br><span class="line"><span class="actionscript">                .then(<span class="function"><span class="keyword">function</span> <span class="params">(fileMd5)</span> </span>&#123; <span class="comment">// 完成</span></span></span><br><span class="line"><span class="javascript">                    <span class="keyword">var</span> end = +<span class="keyword">new</span> <span class="built_in">Date</span>();</span></span><br><span class="line"><span class="javascript">                    <span class="built_in">console</span>.log(<span class="string">"before-send-file  preupload: file.size="</span>+file.size+<span class="string">" file.md5="</span>+fileMd5);</span></span><br><span class="line"><span class="actionscript">                    file.wholeMd5 = fileMd5;<span class="comment">//获取到了md5</span></span></span><br><span class="line"><span class="actionscript">                    <span class="comment">//uploader.options.formData.md5value = file.wholeMd5;//每个文件都附带一个md5，便于实现秒传</span></span></span><br><span class="line"></span><br><span class="line"><span class="javascript">                    $(<span class="string">'#'</span> + file.id).find(<span class="string">'p.state'</span>).text(<span class="string">'MD5计算完毕，可以点击上传了'</span>);</span></span><br><span class="line"><span class="javascript">                    <span class="built_in">console</span>.info(<span class="string">"MD5="</span>+fileMd5);</span></span><br><span class="line">                &#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        &#125;);</span><br><span class="line"><span class="actionscript">        <span class="comment">// 文件上传过程中创建进度条实时显示。</span></span></span><br><span class="line"><span class="actionscript">        uploader.on(<span class="string">'uploadProgress'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(file, percentage)</span> </span>&#123;</span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> $li = $(<span class="string">'#'</span> + file.id),</span></span><br><span class="line"><span class="actionscript">                $percent = $li.find(<span class="string">'.progress .progress-bar'</span>);</span></span><br><span class="line"><span class="actionscript">            <span class="comment">// 避免重复创建</span></span></span><br><span class="line">            if (!$percent.length) &#123;</span><br><span class="line"><span class="javascript">                $percent = $(<span class="string">'&lt;div class="progress progress-striped active"&gt;'</span> +</span></span><br><span class="line"><span class="handlebars"><span class="xml">                    '<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"progress-bar"</span> <span class="attr">role</span>=<span class="string">"progressbar"</span> <span class="attr">style</span>=<span class="string">"width: 0%"</span>&gt;</span>' +</span></span></span><br><span class="line"><span class="actionscript">                    <span class="string">'&lt;/div&gt;'</span> +</span></span><br><span class="line"><span class="actionscript">                    <span class="string">'&lt;/div&gt;'</span>).appendTo($li).find(<span class="string">'.progress-bar'</span>);</span></span><br><span class="line">            &#125;</span><br><span class="line"><span class="actionscript">            $li.find(<span class="string">'p.state'</span>).text(<span class="string">'上传中'</span>);</span></span><br><span class="line"><span class="actionscript">            $percent.css(<span class="string">'width'</span>, percentage * <span class="number">100</span> + <span class="string">'%'</span>);</span></span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line"><span class="actionscript">        <span class="comment">//发送前填充数据</span></span></span><br><span class="line"><span class="actionscript">        uploader.on( <span class="string">'uploadBeforeSend'</span>, <span class="function"><span class="keyword">function</span><span class="params">( block, data )</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">            <span class="comment">// block为分块数据。</span></span></span><br><span class="line"></span><br><span class="line"><span class="actionscript">            <span class="comment">// file为分块对应的file对象。</span></span></span><br><span class="line"><span class="actionscript">            <span class="keyword">var</span> file = block.file;</span></span><br><span class="line"><span class="actionscript">            <span class="keyword">var</span> fileMd5 = file.wholeMd5;</span></span><br><span class="line"><span class="actionscript">            <span class="comment">// 修改data可以控制发送哪些携带数据。</span></span></span><br><span class="line"></span><br><span class="line"><span class="javascript">            <span class="built_in">console</span>.info(<span class="string">"fileName= "</span>+file.name+<span class="string">" fileMd5= "</span>+fileMd5+<span class="string">" fileId= "</span>+file.id);</span></span><br><span class="line"><span class="javascript">            <span class="built_in">console</span>.info(<span class="string">"input file= "</span>+ flie_count);</span></span><br><span class="line"><span class="actionscript">            <span class="comment">// 将存在file对象中的md5数据携带发送过去。</span></span></span><br><span class="line"><span class="actionscript">            data.md5value = fileMd5;<span class="comment">//md5</span></span></span><br><span class="line"><span class="javascript">            data.fileName_ = $(<span class="string">"#s_"</span>+file.id).val();</span></span><br><span class="line"><span class="javascript">            <span class="built_in">console</span>.log(<span class="string">"fileName_: "</span>+data.fileName_);</span></span><br><span class="line"><span class="actionscript">            <span class="comment">// 删除其他数据</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">// delete data.key;</span></span></span><br><span class="line"><span class="actionscript">            <span class="keyword">if</span>(block.chunks&gt;<span class="number">1</span>)&#123; <span class="comment">//文件大于chunksize 分片上传</span></span></span><br><span class="line"><span class="actionscript">                data.isChunked = <span class="literal">true</span>;</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.info(<span class="string">"data.isChunked= "</span>+data.isChunked);</span></span><br><span class="line"><span class="actionscript">            &#125;<span class="keyword">else</span>&#123;</span></span><br><span class="line"><span class="actionscript">                data.isChunked = <span class="literal">false</span>;</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.info(<span class="string">"data.isChunked="</span>+data.isChunked);</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="actionscript">        uploader.on(<span class="string">'uploadSuccess'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(file)</span> </span>&#123;</span></span><br><span class="line"><span class="javascript">            $(<span class="string">'#'</span> + file.id).find(<span class="string">'p.state'</span>).text(<span class="string">'已上传'</span>);</span></span><br><span class="line"><span class="javascript">            $(<span class="string">'#'</span> + file.id).find(<span class="string">".progress"</span>).find(<span class="string">".progress-bar"</span>).attr(<span class="string">"class"</span>, <span class="string">"progress-bar progress-bar-success"</span>);</span></span><br><span class="line"><span class="javascript">            $(<span class="string">'#'</span> + file.id).find(<span class="string">".info"</span>).find(<span class="string">'.btn'</span>).fadeOut(<span class="string">'slow'</span>);<span class="comment">//上传完后删除"删除"按钮</span></span></span><br><span class="line"><span class="javascript">            $(<span class="string">'#StopBtn'</span>).fadeOut(<span class="string">'slow'</span>);</span></span><br><span class="line">        &#125;);</span><br><span class="line"><span class="actionscript">        uploader.on(<span class="string">'uploadError'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(file)</span> </span>&#123;</span></span><br><span class="line"><span class="javascript">            $(<span class="string">'#'</span> + file.id).find(<span class="string">'p.state'</span>).text(<span class="string">'上传出错'</span>);</span></span><br><span class="line"><span class="actionscript">            <span class="comment">//上传出错后进度条变红</span></span></span><br><span class="line"><span class="javascript">            $(<span class="string">'#'</span> + file.id).find(<span class="string">".progress"</span>).find(<span class="string">".progress-bar"</span>).attr(<span class="string">"class"</span>, <span class="string">"progress-bar progress-bar-danger"</span>);</span></span><br><span class="line"><span class="actionscript">            <span class="comment">//添加重试按钮</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//为了防止重复添加重试按钮，做一个判断</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//var retrybutton = $('#' + file.id).find(".btn-retry");</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//$('#' + file.id)</span></span></span><br><span class="line"><span class="javascript">            <span class="keyword">if</span> ($(<span class="string">'#'</span> + file.id).find(<span class="string">".btn-retry"</span>).length &lt; <span class="number">1</span>) &#123;</span></span><br><span class="line"><span class="handlebars"><span class="xml">                var btn = $('<span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">fileid</span>=<span class="string">"' + file.id + '"</span> <span class="attr">class</span>=<span class="string">"btn btn-success btn-retry"</span>&gt;</span><span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"glyphicon glyphicon-refresh"</span>&gt;</span>取消<span class="tag">&lt;/<span class="name">span</span>&gt;</span><span class="tag">&lt;/<span class="name">button</span>&gt;</span>');</span></span></span><br><span class="line"><span class="javascript">                $(<span class="string">'#'</span> + file.id).find(<span class="string">".info"</span>).append(btn);<span class="comment">//.find(".btn-danger")</span></span></span><br><span class="line">            &#125;</span><br><span class="line"><span class="javascript">            $(<span class="string">".btn-retry"</span>).click(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="actionscript">                <span class="comment">//console.log($(this).attr("fileId"));//拿到文件id</span></span></span><br><span class="line"><span class="javascript">                uploader.retry(uploader.getFile($(<span class="keyword">this</span>).attr(<span class="string">"fileId"</span>)));</span></span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;);</span><br><span class="line"><span class="actionscript">        uploader.on(<span class="string">'uploadComplete'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(file)</span> </span>&#123;<span class="comment">//上传完成后回调</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//$('#' + file.id).find('.progress').fadeOut();//上传完删除进度条</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//$('#' + file.id + 'btn').fadeOut('slow')//上传完后删除"删除"按钮</span></span></span><br><span class="line">        &#125;);</span><br><span class="line"><span class="actionscript">        uploader.on(<span class="string">'uploadFinished'</span>, <span class="function"><span class="keyword">function</span> <span class="params">()</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">            <span class="comment">//上传完后的回调方法</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//alert("所有文件上传完毕");</span></span></span><br><span class="line"><span class="actionscript">            <span class="comment">//提交表单</span></span></span><br><span class="line">        &#125;);</span><br><span class="line"><span class="javascript">        $(<span class="string">"#UploadBtn"</span>).click(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="actionscript">            uploader.upload();<span class="comment">//上传</span></span></span><br><span class="line">        &#125;);</span><br><span class="line"><span class="javascript">        $(<span class="string">"#StopBtn"</span>).click(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">            <span class="built_in">console</span>.log($(<span class="string">'#StopBtn'</span>).attr(<span class="string">"status"</span>));</span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> status = $(<span class="string">'#StopBtn'</span>).attr(<span class="string">"status"</span>);</span></span><br><span class="line"><span class="actionscript">            <span class="keyword">if</span> (status == <span class="string">"suspend"</span>) &#123;</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.log(<span class="string">"当前按钮是暂停，即将变为继续"</span>);</span></span><br><span class="line"><span class="javascript">                $(<span class="string">"#StopBtn"</span>).html(<span class="string">"继续上传"</span>);</span></span><br><span class="line"><span class="javascript">                $(<span class="string">"#StopBtn"</span>).attr(<span class="string">"status"</span>, <span class="string">"continuous"</span>);</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.log(<span class="string">"当前所有文件==="</span>+uploader.getFiles());</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.log(<span class="string">"=============暂停上传=============="</span>);</span></span><br><span class="line"><span class="actionscript">                uploader.stop(<span class="literal">true</span>);</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.log(<span class="string">"=============所有当前暂停的文件============="</span>);</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.log(uploader.getFiles(<span class="string">"interrupt"</span>));</span></span><br><span class="line"><span class="actionscript">            &#125; <span class="keyword">else</span> &#123;</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.log(<span class="string">"当前按钮是继续，即将变为暂停"</span>);</span></span><br><span class="line"><span class="javascript">                $(<span class="string">"#StopBtn"</span>).html(<span class="string">"暂停上传"</span>);</span></span><br><span class="line"><span class="javascript">                $(<span class="string">"#StopBtn"</span>).attr(<span class="string">"status"</span>, <span class="string">"suspend"</span>);</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.log(<span class="string">"===============所有当前暂停的文件=============="</span>);</span></span><br><span class="line"><span class="javascript">                <span class="built_in">console</span>.log(uploader.getFiles(<span class="string">"interrupt"</span>));</span></span><br><span class="line"><span class="actionscript">                uploader.upload(uploader.getFiles(<span class="string">"interrupt"</span>));</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"><span class="actionscript">        uploader.on(<span class="string">'uploadAccept'</span>, <span class="function"><span class="keyword">function</span> <span class="params">(file, response)</span> </span>&#123;</span></span><br><span class="line"><span class="actionscript">            <span class="keyword">if</span> (response._raw === <span class="string">'&#123;"error":true&#125;'</span>) &#123;</span></span><br><span class="line"><span class="actionscript">                <span class="keyword">return</span> <span class="literal">false</span>;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里需要注意官网提供的css文件，没有下载进度条的样式，需要自己写入，额外添加的样式：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.progress</span> &#123;</span><br><span class="line">	<span class="attribute">height</span>: <span class="number">20px</span>;</span><br><span class="line">	<span class="attribute">margin-bottom</span>: <span class="number">20px</span>;</span><br><span class="line">	<span class="attribute">overflow</span>: hidden;</span><br><span class="line">	<span class="attribute">background-color</span>: <span class="number">#f5f5f5</span>;</span><br><span class="line">	<span class="attribute">border-radius</span>: <span class="number">4px</span>;</span><br><span class="line">	<span class="attribute">-webkit-box-shadow</span>: inset <span class="number">0</span> <span class="number">1px</span> <span class="number">2px</span> <span class="built_in">rgba</span>(<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0.1</span>);</span><br><span class="line">	<span class="attribute">box-shadow</span>: inset <span class="number">0</span> <span class="number">1px</span> <span class="number">2px</span> <span class="built_in">rgba</span>(<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0.1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-class">.progress</span><span class="selector-class">.active</span> <span class="selector-class">.progress-bar</span> &#123;</span><br><span class="line">	<span class="attribute">-webkit-animation</span>: progress-bar-stripes <span class="number">2s</span> linear infinite;</span><br><span class="line">	<span class="attribute">animation</span>: progress-bar-stripes <span class="number">2s</span> linear infinite;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.progress-striped</span> <span class="selector-class">.progress-bar</span> &#123;</span><br><span class="line">	<span class="attribute">background-image</span>: <span class="built_in">linear-gradient</span>(<span class="number">45deg</span>,rgba(<span class="number">255</span>,<span class="number">255</span>,<span class="number">255</span>,<span class="number">0.15</span>) <span class="number">25%</span>,transparent <span class="number">25%</span>,transparent <span class="number">50%</span>,<span class="built_in">rgba</span>(<span class="number">255</span>,<span class="number">255</span>,<span class="number">255</span>,<span class="number">0.15</span>) <span class="number">50%</span>,<span class="built_in">rgba</span>(<span class="number">255</span>,<span class="number">255</span>,<span class="number">255</span>,<span class="number">0.15</span>) <span class="number">75%</span>,transparent <span class="number">75%</span>,transparent);</span><br><span class="line">	<span class="attribute">background-size</span>: <span class="number">40px</span> <span class="number">40px</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-class">.progress-bar</span> &#123;</span><br><span class="line">	<span class="attribute">background-image</span>: <span class="built_in">-webkit-linear-gradient</span>(top,#<span class="number">428</span>bca <span class="number">0</span>,#<span class="number">3071</span>a9 <span class="number">100%</span>);</span><br><span class="line">	<span class="attribute">background-image</span>: <span class="built_in">linear-gradient</span>(to bottom,#<span class="number">428</span>bca <span class="number">0</span>,#<span class="number">3071</span>a9 <span class="number">100%</span>);</span><br><span class="line">	<span class="attribute">background-repeat</span>: repeat-x;</span><br><span class="line">	<span class="attribute">filter</span>: progid:DXImageTransform.Microsoft.<span class="built_in">gradient</span>(startColorstr=’#ff428bca’,endColorstr=’#ff3071a9’,GradientType=<span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-class">.progress-bar</span> &#123;</span><br><span class="line">	<span class="attribute">float</span>: left;</span><br><span class="line">	<span class="attribute">height</span>: <span class="number">100%</span>;</span><br><span class="line">	<span class="attribute">font-size</span>: <span class="number">12px</span>;</span><br><span class="line">	<span class="attribute">line-height</span>: <span class="number">20px</span>;</span><br><span class="line">	<span class="attribute">color</span>: <span class="number">#fff</span>;</span><br><span class="line">	<span class="attribute">text-align</span>: center;</span><br><span class="line">	<span class="attribute">background-color</span>: <span class="number">#428bca</span>;</span><br><span class="line">	<span class="attribute">box-shadow</span>: inset <span class="number">0</span> -<span class="number">1px</span> <span class="number">0</span> <span class="built_in">rgba</span>(<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">0.15</span>);</span><br><span class="line">	<span class="attribute">transition</span>: width .<span class="number">6s</span> ease;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>最后，我们就可以启动项目输入ip+端口进行测试了,截取某段效果图如下：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/ceph/3.png" alt="result"></p>
+
+          
+            <br>
+            
+  
+    
+    
+
+<section class="widget copyright  desktop mobile">
+  <div class='content'>
+    
+      <blockquote>
+        
+          
+            <p>博客内容遵循 署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</p>
+
+          
+        
+          
+            <p>本文永久链接是：<a href=https://sillybilly-share.top/%E5%9F%BA%E4%BA%8Eamazonaws-s3%E7%9A%84%E5%88%86%E7%89%87%E4%B8%8A%E4%BC%A0-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0.html>https://sillybilly-share.top/%E5%9F%BA%E4%BA%8Eamazonaws-s3%E7%9A%84%E5%88%86%E7%89%87%E4%B8%8A%E4%BC%A0-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0.html</a></p>
+          
+        
+      </blockquote>
+    
+  </div>
+</section>
+
+  
+
+  
+    
+    
+
+<section class="widget qrcode  desktop mobile">
+  
+
+  <div class='content article-entry'>
+    
+  </div>
+</section>
+
+  
+
+
+          
+        </div>
+        
+          
+
+
+  <section class='meta' id="footer-meta">
+    <div class='new-meta-box'>
+      
+        
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2022-11-24T09:35:09+08:00">
+  <a class='notlink'>
+    <i class="fas fa-save" aria-hidden="true"></i>
+    <p>更新于：2022年11月24日</p>
+  </a>
+</div>
+
+        
+      
+        
+          
+  
+  <div class="new-meta-item meta-tags"><a class="tag" href="/tags/java/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>java</p></a></div> <div class="new-meta-item meta-tags"><a class="tag" href="/tags/ceph/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>ceph</p></a></div> <div class="new-meta-item meta-tags"><a class="tag" href="/tags/oss/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>oss</p></a></div>
+
+
+        
+      
+        
+          
+
+        
+      
+        
+          
+  <div class="new-meta-item share -mob-share-list">
+  <div class="-mob-share-list share-body">
+    
+      
+        <a class="-mob-share-qq" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://connect.qq.com/widget/shareqq/index.html?url=https://sillybilly-share.top/%E5%9F%BA%E4%BA%8Eamazonaws-s3%E7%9A%84%E5%88%86%E7%89%87%E4%B8%8A%E4%BC%A0-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0.html&title=基于amazonaws s3的分片上传(前后端实现) - 微笑流浪&summary=前提s3对象存储在单个操作上文件上传的最大值为5个G，所以对于大文件的上传肯定需要使用分片功能。使用分段上传可提供以下优势：1、提高吞吐量 – 可以并行上传分段以提高吞吐量。2、从任何网络问题中快速恢复 - 由于网络原因导致的上传失败，分段的操作可以避免文件再次全量上传，提高上传效率。3、暂停和恢复对象上传 – 启动分段上传后，在一段时间内逐步上传对象分段，不存在过期期限，所以可以显式地完成或中止分段上传。4、在不知道对象大小的情况前就可以开始上传 – 您可以在创建对象时将其上传。s3推荐启动分段上传的阈值为100M,可以根据业务需求自己定义。基本的对象操作官网示例demo:s3开发人员指南。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qq.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-qzone" title="" rel="external nofollow noopener noreferrer"
+          
+          href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://sillybilly-share.top/%E5%9F%BA%E4%BA%8Eamazonaws-s3%E7%9A%84%E5%88%86%E7%89%87%E4%B8%8A%E4%BC%A0-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0.html&title=基于amazonaws s3的分片上传(前后端实现) - 微笑流浪&summary=前提s3对象存储在单个操作上文件上传的最大值为5个G，所以对于大文件的上传肯定需要使用分片功能。使用分段上传可提供以下优势：1、提高吞吐量 – 可以并行上传分段以提高吞吐量。2、从任何网络问题中快速恢复 - 由于网络原因导致的上传失败，分段的操作可以避免文件再次全量上传，提高上传效率。3、暂停和恢复对象上传 – 启动分段上传后，在一段时间内逐步上传对象分段，不存在过期期限，所以可以显式地完成或中止分段上传。4、在不知道对象大小的情况前就可以开始上传 – 您可以在创建对象时将其上传。s3推荐启动分段上传的阈值为100M,可以根据业务需求自己定义。基本的对象操作官网示例demo:s3开发人员指南。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qzone.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-weibo" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://service.weibo.com/share/share.php?url=https://sillybilly-share.top/%E5%9F%BA%E4%BA%8Eamazonaws-s3%E7%9A%84%E5%88%86%E7%89%87%E4%B8%8A%E4%BC%A0-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0.html&title=基于amazonaws s3的分片上传(前后端实现) - 微笑流浪&summary=前提s3对象存储在单个操作上文件上传的最大值为5个G，所以对于大文件的上传肯定需要使用分片功能。使用分段上传可提供以下优势：1、提高吞吐量 – 可以并行上传分段以提高吞吐量。2、从任何网络问题中快速恢复 - 由于网络原因导致的上传失败，分段的操作可以避免文件再次全量上传，提高上传效率。3、暂停和恢复对象上传 – 启动分段上传后，在一段时间内逐步上传对象分段，不存在过期期限，所以可以显式地完成或中止分段上传。4、在不知道对象大小的情况前就可以开始上传 – 您可以在创建对象时将其上传。s3推荐启动分段上传的阈值为100M,可以根据业务需求自己定义。基本的对象操作官网示例demo:s3开发人员指南。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/weibo.png">
+          
+        </a>
+      
+    
+  </div>
+</div>
+
+
+
+        
+      
+    </div>
+  </section>
+
+
+        
+        
+          <div class="prev-next">
+            
+              <a class='prev' href='/nginx%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98.html'>
+                <p class='title'><i class="fas fa-chevron-left" aria-hidden="true"></i>nginx本地缓存</p>
+                <p class='content'>前提通常nginx作为一个很强大的高性能Web和反向代理服务，在没有F5的情况下用来作为负载均衡器都是一种很不错的选择。而实际的使用中我发现nginx的作用远不止于此，本文在此主要讲述nginx...</p>
+              </a>
+            
+            
+              <a class='next' href='/netty-ByteBuf%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%87%8A%E6%94%BE.html'>
+                <p class='title'>netty ByteBuf使用与释放<i class="fas fa-chevron-right" aria-hidden="true"></i></p>
+                <p class='content'>前提在了解netty的byteBuf方法之前，我们需要对JVM的内存分配有一定的认知。这里引用网上的一张JVM内存模型图:
+
+
+
+JVM的内存分配机制大概如下：
+123451、方法区（Metho...</p>
+              </a>
+            
+          </div>
+        
+      </section>
+    </article>
+  
+
+  
+    <!-- 显示推荐文章和评论 -->
+
+
+
+  <article class="post white-box comments shadow floatable">
+    <section class="article typo">
+      <p ct><i class='fas fa-comments'></i> 评论</p>
+      
+      
+      
+        <section id="comments">
+          <div id="lv-container" data-id="city" data-uid="MTAyMC80OTQ2OS8yNTk2MQ==">
+            <noscript><div><i class='fas fa-exclamation-triangle'>&nbsp;无法加载Livere评论系统，请确保您的网络能够正常访问。</div></noscript>
+          </div>
+        </section>
+      
+      
+      
+    </section>
+  </article>
+
+
+  
+
+
+
+
+<!-- 根据页面mathjax变量决定是否加载MathJax数学公式js -->
+
+
+
+  <script>
+    window.subData = {
+      title: '基于amazonaws s3的分片上传(前后端实现)',
+      tools: true
+    }
+  </script>
+
+
+</div>
+<aside class='l_side'>
+  
+  
+
+  
+    
+    
+
+
+  <section class="widget toc-wrapper shadow floatable desktop mobile">
+    
+  <header>
+    
+      <i class="fas fa-list fa-fw" aria-hidden="true"></i><span class='name'>本文目录</span>
+    
+  </header>
+
+
+    <div class='content'>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分片上传实现"><span class="toc-text">分片上传实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#准备"><span class="toc-text">准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#后端接口实现"><span class="toc-text">后端接口实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#前端实现"><span class="toc-text">前端实现</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#测试"><span class="toc-text">测试</span></a></li></ol>
+    </div>
+  </section>
+
+
+  
+
+
+</aside>
+
+
+  
+  <footer class="clearfix white">
+    <br><br>
+    
+      
+        <div class="aplayer-container">
+          
+
+  
+    <meting-js
+      theme='#1BCDFC'
+      autoplay='false'
+      volume='0.7'
+      loop='all'
+      order='list'
+      fixed='false'
+      list-max-height='340px'
+      server='netease'
+      type='playlist'
+      id='4926244994'
+      list-folded='true'>
+    </meting-js>
+  
+
+
+        </div>
+      
+    
+      
+        <br>
+        <div class="social-wrapper">
+          
+            
+              <a href="/atom.xml"
+                class="social fas fa-rss flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="mailto:1579700874@qq.com"
+                class="social fas fa-envelope flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="https://github.com/silly-billy"
+                class="social fab fa-github flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+        </div>
+      
+    
+      
+        
+          <div><p>博客内容遵循 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener">署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</a></p>
+</div>
+        
+      
+    
+      
+        
+          <div><p>本站使用 <a href="https://volantis.js.org/" target="_blank" rel="noopener">Volantis</a> 作为主题 ， 总访问量为 <span id="busuanzi_value_site_uv"></span> 次</p>
+</div>
+        
+      
+    
+      
+        <div class='copyright'>
+        <p>[Copyright © 2019-2020 silly-billy]</p>
+
+        </div>
+      
+    
+  </footer>
+
+<script>setLoadingBarProgress(80);</script>
+
+
+      <script>setLoadingBarProgress(60);</script>
+    </div>
+    <a class="s-top fas fa-arrow-up fa-fw" href='javascript:void(0)'></a>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.min.js"></script>
+
+
+  <script>
+    
+    var SEARCH_SERVICE = "hexo" || "hexo";
+    var ROOT = "/" || "/";
+    if (!ROOT.endsWith('/')) ROOT += '/';
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/instant_page.js" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.js"></script>
+
+  <script type="text/javascript">
+    $(function() {
+      Waves.attach('.flat-btn', ['waves-button']);
+      Waves.attach('.float-btn', ['waves-button', 'waves-float']);
+      Waves.attach('.float-btn-light', ['waves-button', 'waves-float', 'waves-light']);
+      Waves.attach('.flat-box', ['waves-block']);
+      Waves.attach('.float-box', ['waves-block', 'waves-float']);
+      Waves.attach('.waves-image');
+      Waves.init();
+    });
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/busuanzi.pure.mini.js"></script>
+
+
+
+  
+  
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.backstretch.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var imgs=["https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud.jpg", "https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud-1.jpg"];
+        if ('true' == 'true') {
+          function shuffle(arr){
+            /*From countercurrent-time*/
+            var n = arr.length;
+            while(n--) {
+              var index = Math.floor(Math.random() * n);
+              var temp = arr[index];
+              arr[index] = arr[n];
+              arr[n] = temp;
+            }
+          }
+          shuffle(imgs);
+        }
+        if ('.cover') {
+          $('.cover').backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        } else {
+          $.backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        }
+      });
+    </script>
+  
+
+
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/APlayer.min.js" async></script>
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/Meting.min.js" async></script>
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+      if (typeof LivereTower === 'function') { return; }
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+      e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  </script>
+
+
+
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/app.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/search.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/comment_typing.js"></script>
+
+
+
+<!-- 复制 -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/clipboard.min.js"></script>
+<script>
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="fas fa-copy"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copyed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-clipboard-check');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPYED';
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-exclamation-triangle');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+<!-- fancybox -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.js"></script>
+<script>
+  let LAZY_LOAD_IMAGE = "";
+  $(".article-entry").find("fancybox").find("img").each(function () {
+      var element = document.createElement("a");
+      $(element).attr("data-fancybox", "gallery");
+      $(element).attr("href", $(this).attr("src"));
+      /* 图片采用懒加载处理时,
+       * 一般图片标签内会有个属性名来存放图片的真实地址，比如 data-original,
+       * 那么此处将原本的属性名src替换为对应属性名data-original,
+       * 修改如下
+       */
+       if (LAZY_LOAD_IMAGE) {
+         $(element).attr("href", $(this).attr("data-original"));
+       }
+      $(this).wrap(element);
+  });
+</script>
+
+
+
+
+
+
+  <script>setLoadingBarProgress(100);</script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

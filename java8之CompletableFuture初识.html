@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html>
+<head hexo-theme='https://volantis.js.org/#blog'>
+  <meta charset="utf-8">
+  <!-- SEO相关 -->
+  
+    
+  
+  <!-- 渲染优化 -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- 页面元数据 -->
+  
+    <title>java8之CompletableFuture初识 - 微笑流浪</title>
+  
+    <meta name="keywords" content="java,multi-thread">
+  
+  
+    <meta name="description" content="提要在jdk5中增加了很多新的并发处理机制，对于多线程处理有了很大的优化。我们通常会选择通过Future接口构建异步的应用，因为在之前的多线程的实现中，不管是继承thread类还是实现runnable接口，都无法保证获取到之前的执行结果。我们现在可以通过实现Callable接口，并用Future来接收多线程的执行...">
+  
+
+  <!-- feed -->
+  
+
+  <!-- import meta -->
+  
+
+  <!-- link -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css">
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10/dist/APlayer.min.css">
+  
+
+  <!-- import link -->
+  
+
+  <link rel="shortcut icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/favicon.ico">
+
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/style.css">
+
+  
+
+  <script>
+    function setLoadingBarProgress(num) {
+      document.getElementById('loading-bar').style.width=num+"%";
+    }
+  </script>
+
+  
+  
+</head>
+
+<body>
+  
+  <div id="loading-bar-wrapper">
+  <div id="loading-bar"></div>
+</div>
+<header class="l_header shadow floatable">
+
+  <div class='wrapper'>
+    <div class='nav-sub container--flex'>
+      <a class="logo flat-box"></a>
+      <ul class='switcher h-list'>
+        <li><a class="s-comment flat-btn fas fa-comments fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+          <li><a class="s-toc flat-btn fas fa-list fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+      </ul>
+    </div>
+		<div class="nav-main container container--flex">
+      
+        
+        <a class="logo flat-box" target="_self" href='/'>
+          
+          
+          
+          
+            SILLY-BILLY'S <b><sup style='color:#3AA757'>blog</sup></b>
+          
+        </a>
+      
+
+			<div class='menu navigation'>
+				<ul class='h-list'>
+          
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/
+                  
+                  
+                  
+                    id="home"
+                  >
+                  
+                    <i class='fas fa-home fa-fw fa-fw'></i>
+                  
+                  主页
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/categories/
+                  
+                  
+                  
+                    id="categories"
+                  >
+                  
+                    <i class='fas fa-folder-open fa-fw'></i>
+                  
+                  分类
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/tags/
+                  
+                  
+                  
+                    id="tags"
+                  >
+                  
+                    <i class='fas fa-tags fa-fw'></i>
+                  
+                  标签
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/archives/
+                  
+                  
+                  
+                    id="archives"
+                  >
+                  
+                    <i class='fas fa-archive fa-fw'></i>
+                  
+                  归档
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/404.html
+                  
+                  
+                  
+                    id="404html"
+                  >
+                  
+                    <i class='fas fa-link fa-fw'></i>
+                  
+                  友链
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/about/
+                  
+                  
+                  
+                    id="about"
+                  >
+                  
+                    <i class='fas fa-info-circle fa-fw'></i>
+                  
+                  关于
+                </a>
+                
+              </li>
+            
+          
+          
+				</ul>
+			</div>
+
+      
+        <div class="m_search">
+          <form name="searchform" class="form u-search-form">
+            <i class="icon fas fa-search fa-fw"></i>
+            <input type="text" class="input u-search-input" placeholder="搜索" />
+          </form>
+        </div>
+      
+
+			<ul class='switcher h-list'>
+				
+					<li><a class="s-search flat-btn fas fa-search fa-fw" target="_self" href='javascript:void(0)'></a></li>
+				
+				<li><a class="s-menu flat-btn fas fa-bars fa-fw" target="_self" href='javascript:void(0)'></a></li>
+			</ul>
+		</div>
+	</div>
+</header>
+<ul class="menu-phone navigation white-box">
+  
+  
+    <li>
+      <a class="flat-box" href=/
+        
+        
+        
+          id="home"
+        >
+        
+          <i class='fas fa-rss fa-fw'></i>
+        
+        博客
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/categories/
+        
+        
+        
+          id="categories"
+        >
+        
+          <i class='fas fa-folder-open fa-fw'></i>
+        
+        分类
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/tags/
+        
+        
+        
+          id="tags"
+        >
+        
+          <i class='fas fa-tags fa-fw'></i>
+        
+        标签
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/archives/
+        
+        
+        
+          id="archives"
+        >
+        
+          <i class='fas fa-archive fa-fw'></i>
+        
+        归档
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/404.html
+        
+        
+        
+          id="404html"
+        >
+        
+          <i class='fas fa-link fa-fw'></i>
+        
+        友链
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/about/
+        
+        
+        
+          id="about"
+        >
+        
+          <i class='fas fa-info-circle fa-fw'></i>
+        
+        关于
+      </a>
+    </li>
+  
+</ul>
+<script>setLoadingBarProgress(40);</script>
+
+
+
+  <div class="l_body nocover">
+    <div class='body-wrapper'>
+      
+
+<div class='l_main'>
+  
+
+  
+    <article id="post" class="post white-box shadow floatable article-type-post" itemscope itemprop="blogPost">
+      
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  
+    <h1 class="title">
+      <a href="/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html">
+        java8之CompletableFuture初识
+      </a>
+    </h1>
+  
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/java/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>java</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2020年3月24日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+      <section class="article typo">
+        <div class="article-entry" itemprop="articleBody">
+          
+          <h2 id="提要"><a href="#提要" class="headerlink" title="提要"></a>提要</h2><p>在jdk5中增加了很多新的并发处理机制，对于多线程处理有了很大的优化。我们通常会选择通过Future接口构建异步的应用，因为在之前的多线程的实现中，不管是继承thread类还是实现runnable接口，都无法保证获取到之前的执行结果。我们现在可以通过实现Callable接口，并用Future来接收多线程的执行结果。</p>
+<h2 id="Callable处理demo"><a href="#Callable处理demo" class="headerlink" title="Callable处理demo"></a>Callable处理demo</h2><p>通过kafka多线程消费举个例子(伪代码):</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(<span class="keyword">int</span> threads)</span> </span>&#123;</span><br><span class="line">	<span class="comment">//threads核心数 10-最大线程数 0L-空闲等待时间</span></span><br><span class="line">	<span class="keyword">var</span> executors = <span class="keyword">new</span> ThreadPoolExecutor(threads, <span class="number">10</span>, <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">	<span class="keyword">new</span> ArrayBlockingQueue(<span class="number">1000</span>), <span class="keyword">new</span> ThreadPoolExecutor.CallerRunsPolicy());</span><br><span class="line"><span class="comment">//启动一个子线程来监听消息</span></span><br><span class="line">	Thread t = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">		<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">		<span class="comment">/*采用循环不断从kafka里捞数据*/</span></span><br><span class="line">			ConsumerRecords&lt;String, String&gt; records = <span class="comment">//todo 返回数据;</span></span><br><span class="line">			List&lt;Callable&lt;String&gt;&gt; consumerWork = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">			<span class="keyword">for</span> (<span class="keyword">final</span> ConsumerRecord record : records) &#123;</span><br><span class="line">				consumerWork.add(writeData(record));</span><br><span class="line">			&#125;</span><br><span class="line">			List&lt;Future&lt;String&gt;&gt; futures = executors.invokeAll(consumerWork);</span><br><span class="line">			<span class="comment">//拿到futures结果</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">			log.error(<span class="string">"Test.execute()-&gt;&#123;&#125;"</span>,e);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;);</span><br><span class="line">	t.start();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>下面是实现Callable的耗时任务(伪代码):</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Callable&lt;String&gt; <span class="title">writeData</span><span class="params">(ConsumerRecord record)</span> </span>&#123;</span><br><span class="line">	Callable&lt;String&gt; run = <span class="keyword">new</span> Callable&lt;String&gt;() &#123;</span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="comment">// TODO 耗时任务逻辑</span></span><br><span class="line">    	<span class="comment">/*业务处理*/</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="meta">@Override</span></span><br><span class="line">		<span class="function"><span class="keyword">public</span> String <span class="title">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">   			run();</span><br><span class="line">   			<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;;</span><br><span class="line">   <span class="keyword">return</span> run;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>看起来挺不错的，可是当我们真正去调用get()方法时，当前线程会去等待异步任务的执行。换言之，主线程会被阻塞，大大增加了异步操作的时耗。</p>
+<h2 id="CompletableFuture使用"><a href="#CompletableFuture使用" class="headerlink" title="CompletableFuture使用"></a>CompletableFuture使用</h2><h3 id="实际开发场景"><a href="#实际开发场景" class="headerlink" title="实际开发场景"></a>实际开发场景</h3><ol>
+<li>针对Future的完成事件，我们希望可以得到它完成后的返回结果，又不想阻塞主线程的运行</li>
+<li>面对Future集合来讲，很难将List中的future结果依赖关系描述出来，我们希望在所有future完成结束后去做一些事情</li>
+<li>在异步计算中，存在某两个业务处理独立计算，而其中一个依赖前一个的运算结果。<br>如上的几种场景，是future的短板，它本身缺乏一种观察者模式去监听线程处理状态从而得到回调结果。面对这样的局限性，在java8中CompletableFuture提供了较为不错的api实现</li>
+</ol>
+<h3 id="CompletableFuture常见API解析"><a href="#CompletableFuture常见API解析" class="headerlink" title="CompletableFuture常见API解析"></a>CompletableFuture常见API解析</h3><p>注：所有没有指定Executor的方法会使用ForkJoinPool.commonPool() 作为它的线程池执行异步代码</p>
+<h4 id="创建异步任务runAsync和supplyAsync"><a href="#创建异步任务runAsync和supplyAsync" class="headerlink" title="创建异步任务runAsync和supplyAsync"></a>创建异步任务runAsync和supplyAsync</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;U&gt; <span class="function">CompletableFuture&lt;U&gt; <span class="title">supplyAsync</span><span class="params">(Supplier&lt;U&gt; var0)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> asyncSupplyStage(asyncPool, var0);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;U&gt; <span class="function">CompletableFuture&lt;U&gt; <span class="title">supplyAsync</span><span class="params">(Supplier&lt;U&gt; var0, Executor var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> asyncSupplyStage(screenExecutor(var1), var0);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> CompletableFuture&lt;Void&gt; <span class="title">runAsync</span><span class="params">(Runnable var0)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> asyncRunStage(asyncPool, var0);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> CompletableFuture&lt;Void&gt; <span class="title">runAsync</span><span class="params">(Runnable var0, Executor var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> asyncRunStage(screenExecutor(var1), var0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>runAsync方法没有返回值，异步操作完就结束了,而supplyAsync方法类似submit方法，支持返回值。</p>
+<h4 id="异步任务执行完时的回调方法whenComplete和exceptionally"><a href="#异步任务执行完时的回调方法whenComplete和exceptionally" class="headerlink" title="异步任务执行完时的回调方法whenComplete和exceptionally"></a>异步任务执行完时的回调方法whenComplete和exceptionally</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> CompletableFuture&lt;T&gt; <span class="title">whenComplete</span><span class="params">(BiConsumer&lt;? <span class="keyword">super</span> T, ? <span class="keyword">super</span> Throwable&gt; var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniWhenCompleteStage((Executor)<span class="keyword">null</span>, var1);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> CompletableFuture&lt;T&gt; <span class="title">whenCompleteAsync</span><span class="params">(BiConsumer&lt;? <span class="keyword">super</span> T, ? <span class="keyword">super</span> Throwable&gt; var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniWhenCompleteStage(asyncPool, var1);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> CompletableFuture&lt;T&gt; <span class="title">whenCompleteAsync</span><span class="params">(BiConsumer&lt;? <span class="keyword">super</span> T, ? <span class="keyword">super</span> Throwable&gt; var1, Executor var2)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniWhenCompleteStage(screenExecutor(var2), var1);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> CompletableFuture&lt;T&gt; <span class="title">exceptionally</span><span class="params">(Function&lt;Throwable, ? extends T&gt; var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniExceptionallyStage(var1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这些方法都是上述创建的异步任务完成后 (也可能是抛出异常后结束) 所执行的方法。whenComplete和whenCompleteAsync方法的区别在于：<br>    &emsp;前者是由上面的线程继续执行，而后者是将whenCompleteAsync的任务继续交给线程池去做决定。<br>exceptionally则是上面的任务执行抛出异常后所要执行的方法。<br>值得注意的是：哪怕supplyAsync抛出了异常，whenComplete也会执行，意思就是，只要supplyAsync执行结束，它就会执行，不管是不是正常执行完。exceptionally只有在异常的时候才会执行。其实，在whenComplete的参数内e就代表异常了，判断它是否为null，就可以判断是否有异常，只不过这样的做法，我们不提倡。whenComplete和exceptionally这两个谁在前，谁先执行。 此类的回调方法，哪怕主线程已经执行结束，回调方法依然可以继续等待异步任务执行完成再触发得到执行结果。</p>
+<h4 id="thenApply和handle方法"><a href="#thenApply和handle方法" class="headerlink" title="thenApply和handle方法"></a>thenApply和handle方法</h4><p>如果两个任务之间有依赖关系，比如B任务依赖于A任务的执行结果，那么就可以使用这两个方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;U&gt; <span class="function">CompletableFuture&lt;U&gt; <span class="title">thenApply</span><span class="params">(Function&lt;? <span class="keyword">super</span> T, ? extends U&gt; var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniApplyStage((Executor)<span class="keyword">null</span>, var1);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;U&gt; <span class="function">CompletableFuture&lt;U&gt; <span class="title">thenApplyAsync</span><span class="params">(Function&lt;? <span class="keyword">super</span> T, ? extends U&gt; var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniApplyStage(asyncPool, var1);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> &lt;U&gt; <span class="function">CompletableFuture&lt;U&gt; <span class="title">thenApplyAsync</span><span class="params">(Function&lt;? <span class="keyword">super</span> T, ? extends U&gt; var1, Executor var2)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniApplyStage(screenExecutor(var2), var1);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> &lt;U&gt; <span class="function">CompletableFuture&lt;U&gt; <span class="title">handle</span><span class="params">(BiFunction&lt;? <span class="keyword">super</span> T, Throwable, ? extends U&gt; var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniHandleStage((Executor)<span class="keyword">null</span>, var1);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;U&gt; <span class="function">CompletableFuture&lt;U&gt; <span class="title">handleAsync</span><span class="params">(BiFunction&lt;? <span class="keyword">super</span> T, Throwable, ? extends U&gt; var1)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniHandleStage(asyncPool, var1);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;U&gt; <span class="function">CompletableFuture&lt;U&gt; <span class="title">handleAsync</span><span class="params">(BiFunction&lt;? <span class="keyword">super</span> T, Throwable, ? extends U&gt; var1, Executor var2)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>.uniHandleStage(screenExecutor(var2), var1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这两个方法，效果是一样的。区别在于，当A任务执行出现异常时，thenApply方法不会执行，而handle 方法一样会去执行，因为在handle方法里，我们可以处理异常，而前者不行。<br>这里延伸两个方法thenAccept和thenRun。其实和上面两个方法差不多，都是等待前面一个任务执行完 再执行。区别就在于thenAccept接收前面任务的结果，且无需return。而thenRun只要前面的任务执行完成，它就执行，不关心前面的执行结果如何如果前面的任务抛了异常，非正常结束，这两个方法是不会执行的，所以处理不了异常情况。</p>
+<h4 id="allOf方法"><a href="#allOf方法" class="headerlink" title="allOf方法"></a>allOf方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> CompletableFuture&lt;Void&gt; <span class="title">allOf</span><span class="params">(CompletableFuture... var0)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> andTree(var0, <span class="number">0</span>, var0.length - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>很多时候，不止存在两个异步任务，可能有几十上百个。我们需要等这些任务都完成后，再来执行相应的操作。那怎么集中监听所有任务执行结束与否呢？ allOf方法可以帮我们完成<br>它接收一个可变入参，既可以接收CompletableFuture单个对象，可以接收其数组对象。</p>
+<h2 id="代码重构"><a href="#代码重构" class="headerlink" title="代码重构"></a>代码重构</h2><p>大致了解jdk8中对多线程异步流处理之后，我们对刚开始的代码进一步修改（对应业务-&gt;某两个业务处理独立计算，而其中一个依赖前一个的运算结果）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(<span class="keyword">int</span> threads)</span></span>&#123;</span><br><span class="line">    <span class="keyword">var</span> executors = <span class="keyword">new</span> ThreadPoolExecutor(threads, <span class="number">10</span>, <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">            <span class="keyword">new</span> ArrayBlockingQueue(<span class="number">1000</span>), <span class="keyword">new</span> ThreadPoolExecutor.CallerRunsPolicy());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123; </span><br><span class="line">            <span class="comment">/*采用循环不断从kafka里捞数据*/</span></span><br><span class="line">            ConsumerRecords&lt;String, String&gt; records = <span class="comment">//todo 返回数据;</span></span><br><span class="line">            <span class="comment">//基于异步的流式编程</span></span><br><span class="line">            Flux.fromIterable(records)</span><br><span class="line">                    .doOnNext(a -&gt; CompletableFuture.supplyAsync(()-&gt;&#123;   <span class="comment">//创建异步任务</span></span><br><span class="line">                        <span class="keyword">return</span> parse1(a);  <span class="comment">//todo 处理d中数据</span></span><br><span class="line">                    &#125;,executors).thenAcceptAsync(b-&gt;parse2(b)))  <span class="comment">//取得parse1处理后的数据进行下一步处理</span></span><br><span class="line">                    .subscribe();  <span class="comment">//订阅处理流</span></span><br><span class="line">           </span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="归档"><a href="#归档" class="headerlink" title="归档"></a>归档</h2><table>
+<thead>
+<tr>
+<th align="center"></th>
+<th align="center">Futrue</th>
+<th align="center">FutureTask</th>
+<th align="center">CompletionService</th>
+<th align="center">CompletableFuture</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">原理</td>
+<td align="center">Futrue接口</td>
+<td align="center">RunnableFuture的实现类</td>
+<td align="center">阻塞队列+FutureTask接口</td>
+<td align="center">Future<T>CompletionStage<T>实现类</td>
+</tr>
+<tr>
+<td align="center">支持任务完成先后顺序</td>
+<td align="center">支持</td>
+<td align="center">未知</td>
+<td align="center">支持</td>
+<td align="center">支持</td>
+</tr>
+<tr>
+<td align="center">异常捕捉</td>
+<td align="center">代码实现</td>
+<td align="center">代码实现</td>
+<td align="center">代码实现</td>
+<td align="center">源生API支持</td>
+</tr>
+<tr>
+<td align="center">建议</td>
+<td align="center">CPU高速轮询，耗资源</td>
+<td align="center">功能不对口，并发任务这一块多套一层</td>
+<td align="center">没有JDK8CompletableFuture之前最好的方案</td>
+<td align="center">API极端丰富，配合流式编程，速度飞起，推荐使用</td>
+</tr>
+</tbody></table>
+
+          
+            <br>
+            
+  
+    
+    
+
+<section class="widget copyright  desktop mobile">
+  <div class='content'>
+    
+      <blockquote>
+        
+          
+            <p>博客内容遵循 署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</p>
+
+          
+        
+          
+            <p>本文永久链接是：<a href=https://sillybilly-share.top/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html>https://sillybilly-share.top/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html</a></p>
+          
+        
+      </blockquote>
+    
+  </div>
+</section>
+
+  
+
+  
+    
+    
+
+<section class="widget qrcode  desktop mobile">
+  
+
+  <div class='content article-entry'>
+    
+  </div>
+</section>
+
+  
+
+
+          
+        </div>
+        
+          
+
+
+  <section class='meta' id="footer-meta">
+    <div class='new-meta-box'>
+      
+        
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2022-11-24T09:35:09+08:00">
+  <a class='notlink'>
+    <i class="fas fa-save" aria-hidden="true"></i>
+    <p>更新于：2022年11月24日</p>
+  </a>
+</div>
+
+        
+      
+        
+          
+  
+  <div class="new-meta-item meta-tags"><a class="tag" href="/tags/java/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>java</p></a></div> <div class="new-meta-item meta-tags"><a class="tag" href="/tags/multi-thread/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>multi-thread</p></a></div>
+
+
+        
+      
+        
+          
+
+        
+      
+        
+          
+  <div class="new-meta-item share -mob-share-list">
+  <div class="-mob-share-list share-body">
+    
+      
+        <a class="-mob-share-qq" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://connect.qq.com/widget/shareqq/index.html?url=https://sillybilly-share.top/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html&title=java8之CompletableFuture初识 - 微笑流浪&summary=提要在jdk5中增加了很多新的并发处理机制，对于多线程处理有了很大的优化。我们通常会选择通过Future接口构建异步的应用，因为在之前的多线程的实现中，不管是继承thread类还是实现runnable接口，都无法保证获取到之前的执行结果。我们现在可以通过实现Callable接口，并用Future来接收多线程的执行结果。
+Callable处理demo通过kafka多线程消费举个例子(伪代码):
+1234567891011121314151617181920212223public void execute(int threads) &#123;	//threads核心数 10-最大线程数 0L-空闲等待时间	var executors = new ThreadPoolExecutor(threads, 10, 0L, TimeUnit.MILLISECONDS,	new ArrayBlockingQueue(1000), new ThreadPoolExecutor.CallerRunsPolicy());//启动一个子线程来监听消息	Thread t = new Thread(() -&gt; &#123;		try &#123;		while (true) &#123;		/*采用循环不断从kafka里捞数据*/			ConsumerRecords&lt;String, String&gt; records = //todo 返回数据;			List&lt;Callable&lt;String&gt;&gt; consumerWork = new ArrayList&lt;&gt;();			for (final ConsumerRecord record : records) &#123;				consumerWork.add(writeData(record));			&#125;			List&lt;Future&lt;String&gt;&gt; futures = executors.invokeAll(consumerWork);			//拿到futures结果			&#125;		&#125; catch (InterruptedException e) &#123;			log.error("Test.execute()-&gt;&#123;&#125;",e);		&#125;	&#125;);	t.start();&#125;"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qq.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-qzone" title="" rel="external nofollow noopener noreferrer"
+          
+          href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://sillybilly-share.top/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html&title=java8之CompletableFuture初识 - 微笑流浪&summary=提要在jdk5中增加了很多新的并发处理机制，对于多线程处理有了很大的优化。我们通常会选择通过Future接口构建异步的应用，因为在之前的多线程的实现中，不管是继承thread类还是实现runnable接口，都无法保证获取到之前的执行结果。我们现在可以通过实现Callable接口，并用Future来接收多线程的执行结果。
+Callable处理demo通过kafka多线程消费举个例子(伪代码):
+1234567891011121314151617181920212223public void execute(int threads) &#123;	//threads核心数 10-最大线程数 0L-空闲等待时间	var executors = new ThreadPoolExecutor(threads, 10, 0L, TimeUnit.MILLISECONDS,	new ArrayBlockingQueue(1000), new ThreadPoolExecutor.CallerRunsPolicy());//启动一个子线程来监听消息	Thread t = new Thread(() -&gt; &#123;		try &#123;		while (true) &#123;		/*采用循环不断从kafka里捞数据*/			ConsumerRecords&lt;String, String&gt; records = //todo 返回数据;			List&lt;Callable&lt;String&gt;&gt; consumerWork = new ArrayList&lt;&gt;();			for (final ConsumerRecord record : records) &#123;				consumerWork.add(writeData(record));			&#125;			List&lt;Future&lt;String&gt;&gt; futures = executors.invokeAll(consumerWork);			//拿到futures结果			&#125;		&#125; catch (InterruptedException e) &#123;			log.error("Test.execute()-&gt;&#123;&#125;",e);		&#125;	&#125;);	t.start();&#125;"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qzone.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-weibo" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://service.weibo.com/share/share.php?url=https://sillybilly-share.top/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html&title=java8之CompletableFuture初识 - 微笑流浪&summary=提要在jdk5中增加了很多新的并发处理机制，对于多线程处理有了很大的优化。我们通常会选择通过Future接口构建异步的应用，因为在之前的多线程的实现中，不管是继承thread类还是实现runnable接口，都无法保证获取到之前的执行结果。我们现在可以通过实现Callable接口，并用Future来接收多线程的执行结果。
+Callable处理demo通过kafka多线程消费举个例子(伪代码):
+1234567891011121314151617181920212223public void execute(int threads) &#123;	//threads核心数 10-最大线程数 0L-空闲等待时间	var executors = new ThreadPoolExecutor(threads, 10, 0L, TimeUnit.MILLISECONDS,	new ArrayBlockingQueue(1000), new ThreadPoolExecutor.CallerRunsPolicy());//启动一个子线程来监听消息	Thread t = new Thread(() -&gt; &#123;		try &#123;		while (true) &#123;		/*采用循环不断从kafka里捞数据*/			ConsumerRecords&lt;String, String&gt; records = //todo 返回数据;			List&lt;Callable&lt;String&gt;&gt; consumerWork = new ArrayList&lt;&gt;();			for (final ConsumerRecord record : records) &#123;				consumerWork.add(writeData(record));			&#125;			List&lt;Future&lt;String&gt;&gt; futures = executors.invokeAll(consumerWork);			//拿到futures结果			&#125;		&#125; catch (InterruptedException e) &#123;			log.error("Test.execute()-&gt;&#123;&#125;",e);		&#125;	&#125;);	t.start();&#125;"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/weibo.png">
+          
+        </a>
+      
+    
+  </div>
+</div>
+
+
+
+        
+      
+    </div>
+  </section>
+
+
+        
+        
+          <div class="prev-next">
+            
+              <a class='prev' href='/netty%E5%AE%9E%E7%8E%B0tcp%E5%92%8Cwebsocket%E4%B9%8B%E9%97%B4%E7%9A%84%E9%80%9A%E4%BF%A1.html'>
+                <p class='title'><i class="fas fa-chevron-left" aria-hidden="true"></i>netty实现tcp和websocket之间的通信</p>
+                <p class='content'>前提公司要求做一个中间层，用来实现pos机和web端之间的通信。由于年前做通信网关的时候，我接触了些netty的皮毛，深知netty在通信编程中的地位以及强大的api实现，所以这次我也准备用ne...</p>
+              </a>
+            
+            
+              <a class='next' href='/ceph%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8-amasonaws-s3-api%E9%AA%8C%E8%AF%81.html'>
+                <p class='title'>ceph对象存储-amasonaws s3 api验证<i class="fas fa-chevron-right" aria-hidden="true"></i></p>
+                <p class='content'>前提  Ceph的软件库为客户端应用程序对基于RADOS对象的存储系统提供了直接访问，并为Ceph的某些高级功能（包括RADOS块设备（RBD），RADOS网关（RGW）和Ceph文件系统（ C...</p>
+              </a>
+            
+          </div>
+        
+      </section>
+    </article>
+  
+
+  
+    <!-- 显示推荐文章和评论 -->
+
+
+
+  <article class="post white-box comments shadow floatable">
+    <section class="article typo">
+      <p ct><i class='fas fa-comments'></i> 评论</p>
+      
+      
+      
+        <section id="comments">
+          <div id="lv-container" data-id="city" data-uid="MTAyMC80OTQ2OS8yNTk2MQ==">
+            <noscript><div><i class='fas fa-exclamation-triangle'>&nbsp;无法加载Livere评论系统，请确保您的网络能够正常访问。</div></noscript>
+          </div>
+        </section>
+      
+      
+      
+    </section>
+  </article>
+
+
+  
+
+
+
+
+<!-- 根据页面mathjax变量决定是否加载MathJax数学公式js -->
+
+
+
+  <script>
+    window.subData = {
+      title: 'java8之CompletableFuture初识',
+      tools: true
+    }
+  </script>
+
+
+</div>
+<aside class='l_side'>
+  
+  
+
+  
+    
+    
+
+
+  <section class="widget toc-wrapper shadow floatable desktop mobile">
+    
+  <header>
+    
+      <i class="fas fa-list fa-fw" aria-hidden="true"></i><span class='name'>本文目录</span>
+    
+  </header>
+
+
+    <div class='content'>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#提要"><span class="toc-text">提要</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Callable处理demo"><span class="toc-text">Callable处理demo</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CompletableFuture使用"><span class="toc-text">CompletableFuture使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#实际开发场景"><span class="toc-text">实际开发场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CompletableFuture常见API解析"><span class="toc-text">CompletableFuture常见API解析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#创建异步任务runAsync和supplyAsync"><span class="toc-text">创建异步任务runAsync和supplyAsync</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#异步任务执行完时的回调方法whenComplete和exceptionally"><span class="toc-text">异步任务执行完时的回调方法whenComplete和exceptionally</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#thenApply和handle方法"><span class="toc-text">thenApply和handle方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#allOf方法"><span class="toc-text">allOf方法</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码重构"><span class="toc-text">代码重构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#归档"><span class="toc-text">归档</span></a></li></ol>
+    </div>
+  </section>
+
+
+  
+
+
+</aside>
+
+
+  
+  <footer class="clearfix white">
+    <br><br>
+    
+      
+        <div class="aplayer-container">
+          
+
+  
+    <meting-js
+      theme='#1BCDFC'
+      autoplay='false'
+      volume='0.7'
+      loop='all'
+      order='list'
+      fixed='false'
+      list-max-height='340px'
+      server='netease'
+      type='playlist'
+      id='4926244994'
+      list-folded='true'>
+    </meting-js>
+  
+
+
+        </div>
+      
+    
+      
+        <br>
+        <div class="social-wrapper">
+          
+            
+              <a href="/atom.xml"
+                class="social fas fa-rss flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="mailto:1579700874@qq.com"
+                class="social fas fa-envelope flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="https://github.com/silly-billy"
+                class="social fab fa-github flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+        </div>
+      
+    
+      
+        
+          <div><p>博客内容遵循 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener">署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</a></p>
+</div>
+        
+      
+    
+      
+        
+          <div><p>本站使用 <a href="https://volantis.js.org/" target="_blank" rel="noopener">Volantis</a> 作为主题 ， 总访问量为 <span id="busuanzi_value_site_uv"></span> 次</p>
+</div>
+        
+      
+    
+      
+        <div class='copyright'>
+        <p>[Copyright © 2019-2020 silly-billy]</p>
+
+        </div>
+      
+    
+  </footer>
+
+<script>setLoadingBarProgress(80);</script>
+
+
+      <script>setLoadingBarProgress(60);</script>
+    </div>
+    <a class="s-top fas fa-arrow-up fa-fw" href='javascript:void(0)'></a>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.min.js"></script>
+
+
+  <script>
+    
+    var SEARCH_SERVICE = "hexo" || "hexo";
+    var ROOT = "/" || "/";
+    if (!ROOT.endsWith('/')) ROOT += '/';
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/instant_page.js" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.js"></script>
+
+  <script type="text/javascript">
+    $(function() {
+      Waves.attach('.flat-btn', ['waves-button']);
+      Waves.attach('.float-btn', ['waves-button', 'waves-float']);
+      Waves.attach('.float-btn-light', ['waves-button', 'waves-float', 'waves-light']);
+      Waves.attach('.flat-box', ['waves-block']);
+      Waves.attach('.float-box', ['waves-block', 'waves-float']);
+      Waves.attach('.waves-image');
+      Waves.init();
+    });
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/busuanzi.pure.mini.js"></script>
+
+
+
+  
+  
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.backstretch.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var imgs=["https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud.jpg", "https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud-1.jpg"];
+        if ('true' == 'true') {
+          function shuffle(arr){
+            /*From countercurrent-time*/
+            var n = arr.length;
+            while(n--) {
+              var index = Math.floor(Math.random() * n);
+              var temp = arr[index];
+              arr[index] = arr[n];
+              arr[n] = temp;
+            }
+          }
+          shuffle(imgs);
+        }
+        if ('.cover') {
+          $('.cover').backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        } else {
+          $.backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        }
+      });
+    </script>
+  
+
+
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/APlayer.min.js" async></script>
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/Meting.min.js" async></script>
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+      if (typeof LivereTower === 'function') { return; }
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+      e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  </script>
+
+
+
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/app.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/search.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/comment_typing.js"></script>
+
+
+
+<!-- 复制 -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/clipboard.min.js"></script>
+<script>
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="fas fa-copy"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copyed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-clipboard-check');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPYED';
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-exclamation-triangle');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+<!-- fancybox -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.js"></script>
+<script>
+  let LAZY_LOAD_IMAGE = "";
+  $(".article-entry").find("fancybox").find("img").each(function () {
+      var element = document.createElement("a");
+      $(element).attr("data-fancybox", "gallery");
+      $(element).attr("href", $(this).attr("src"));
+      /* 图片采用懒加载处理时,
+       * 一般图片标签内会有个属性名来存放图片的真实地址，比如 data-original,
+       * 那么此处将原本的属性名src替换为对应属性名data-original,
+       * 修改如下
+       */
+       if (LAZY_LOAD_IMAGE) {
+         $(element).attr("href", $(this).attr("data-original"));
+       }
+      $(this).wrap(element);
+  });
+</script>
+
+
+
+
+
+
+  <script>setLoadingBarProgress(100);</script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
