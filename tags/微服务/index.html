@@ -18,7 +18,7 @@
 
   <!-- 页面元数据 -->
   
-    <title>分类：rabbitmq - 微笑流浪</title>
+    <title>标签：微服务 - 微笑流浪</title>
   
   
 
@@ -362,8 +362,8 @@
       
         
   <h2 class="title">
-    <a href="/springcloudstream-%E9%9B%86%E6%88%90kafka%E5%92%8Crabbitmq.html">
-      springcloudstream 集成kafka和rabbitmq
+    <a href="/%E8%87%AA%E5%AE%9A%E4%B9%89springcloud%20loadbalancer%E8%A7%84%E5%88%99%20.html">
+      自定义spring cloud loadbalancer负载路由规则
     </a>
   </h2>
 
@@ -388,9 +388,9 @@
             
   
   <div class='new-meta-item category'>
-    <a href='/categories/rabbitmq/' rel="nofollow">
+    <a href='/categories/spring-cloud-loadbalancer/' rel="nofollow">
       <i class="fas fa-folder-open" aria-hidden="true"></i>
-      <p>spring&nbsp;/&nbsp;springcloudstream&nbsp;/&nbsp;kafka&nbsp;/&nbsp;rabbitmq</p>
+      <p>spring cloud gateway&nbsp;/&nbsp;spring cloud loadbalancer</p>
     </a>
   </div>
 
@@ -401,7 +401,7 @@
             <div class="new-meta-item date">
   <a class='notlink'>
     <i class="fas fa-edit" aria-hidden="true"></i>
-    <p>发布于：2020年3月31日</p>
+    <p>发布于：2022年12月1日</p>
   </a>
 </div>
 
@@ -412,13 +412,13 @@
   <div class="new-meta-item wordcount">
     <a class='notlink'>
       <i class="fas fa-keyboard" aria-hidden="true"></i>
-      <p>字数：1.3k字</p>
+      <p>字数：2.6k字</p>
     </a>
   </div>
   <div class="new-meta-item readtime">
     <a class='notlink'>
       <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-      <p>时长：6分钟</p>
+      <p>时长：11分钟</p>
     </a>
   </div>
 
@@ -440,13 +440,12 @@
 
   <section class="article typo">
     <div class="article-entry" itemprop="articleBody">
-      <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>业务中不同消息中间件的切换，需要修改大量的代码，增加了业务开发者的负担。所以我们需要寻求一种解决方案用来兼容多种消息中间件，springcloudstream就是一个很好的选择，它提供许多可以简化消息驱动微服务应用程序编写的抽象和原语，目前springcloudstream支持的binder有RabbitMQ、Apache Kafka、Amazon Kinesis、Google PubSub等。在这里用springcloudstream编写简单的demo同时集成kafka和rabbitmq,验证消息中间件的可用性。</p>
-<h2 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h2><p>创建一个springboot工程,并添加核心jar包:</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-cloud-starter-stream-rabbit&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-cloud-starter-stream-kafka&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-cloud-stream&lt;/artifactId&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+      <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>在微服务的架构中，虽然每个服务都是独立开发，但是如果一个服务由多个人协同开发，就会出现请求乱窜的问题。即服务A由甲乙两个人共同开发，<code>nacos</code>上会生成<code>A1</code>、<code>A2</code>两个服务实例，甲本地发起一个请求可能会打到乙启动的服务实例上，但该实例上并没有甲开发的新功能，就会导致请求报错。</p>
+<p>为了解决这样尴尬的问题，通常我们都是在<code>naocs</code>上临时将其他节点下线，但这样不仅影响到其他人的开发进度，同时频繁的上下线也比较繁琐，所以从开发效率来看，需要我们另辟蹊径。</p>
       
         
           <div class="button readmore">
-            <a href="/springcloudstream-%E9%9B%86%E6%88%90kafka%E5%92%8Crabbitmq.html">
+            <a href="/%E8%87%AA%E5%AE%9A%E4%B9%89springcloud%20loadbalancer%E8%A7%84%E5%88%99%20.html">
               <i class="fas fa-book-open fa-fw" aria-hidden="true"></i> Read More
             </a>
           </div>
@@ -472,7 +471,6 @@
 
     
   
-
 </div>
 <aside class='l_side'>
   
