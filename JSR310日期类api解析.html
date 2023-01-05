@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html>
+<head hexo-theme='https://volantis.js.org/#blog'>
+  <meta charset="utf-8">
+  <!-- SEO相关 -->
+  
+    
+  
+  <!-- 渲染优化 -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- 页面元数据 -->
+  
+    <title>JSR310日期类api解析 - 微笑流浪</title>
+  
+    <meta name="keywords" content="java,date">
+  
+  
+    <meta name="description" content="前提之前在项目中零零散散的用到过java8新推的JSR310的日期规范，主要是rt.jar下的java.time的使用，因为实在是太好用了，所以本人誓要抽空系统的整理一遍。
+时区的理解1863年，国际上首次出现时区的概念。时区通过设立一个区域的标准时间部分地解决了这个问题。世界各国位于地球不同位置上，因此不同国家...">
+  
+
+  <!-- feed -->
+  
+
+  <!-- import meta -->
+  
+
+  <!-- link -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css">
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10/dist/APlayer.min.css">
+  
+
+  <!-- import link -->
+  
+
+  <link rel="shortcut icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/favicon.ico">
+
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/style.css">
+
+  
+
+  <script>
+    function setLoadingBarProgress(num) {
+      document.getElementById('loading-bar').style.width=num+"%";
+    }
+  </script>
+
+  
+  
+</head>
+
+<body>
+  
+  <div id="loading-bar-wrapper">
+  <div id="loading-bar"></div>
+</div>
+<header class="l_header shadow floatable">
+
+  <div class='wrapper'>
+    <div class='nav-sub container--flex'>
+      <a class="logo flat-box"></a>
+      <ul class='switcher h-list'>
+        <li><a class="s-comment flat-btn fas fa-comments fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+          <li><a class="s-toc flat-btn fas fa-list fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+      </ul>
+    </div>
+		<div class="nav-main container container--flex">
+      
+        
+        <a class="logo flat-box" target="_self" href='/'>
+          
+          
+          
+          
+            SILLY-BILLY'S <b><sup style='color:#3AA757'>blog</sup></b>
+          
+        </a>
+      
+
+			<div class='menu navigation'>
+				<ul class='h-list'>
+          
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/
+                  
+                  
+                  
+                    id="home"
+                  >
+                  
+                    <i class='fas fa-home fa-fw fa-fw'></i>
+                  
+                  主页
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/categories/
+                  
+                  
+                  
+                    id="categories"
+                  >
+                  
+                    <i class='fas fa-folder-open fa-fw'></i>
+                  
+                  分类
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/tags/
+                  
+                  
+                  
+                    id="tags"
+                  >
+                  
+                    <i class='fas fa-tags fa-fw'></i>
+                  
+                  标签
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/archives/
+                  
+                  
+                  
+                    id="archives"
+                  >
+                  
+                    <i class='fas fa-archive fa-fw'></i>
+                  
+                  归档
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/404.html
+                  
+                  
+                  
+                    id="404html"
+                  >
+                  
+                    <i class='fas fa-link fa-fw'></i>
+                  
+                  友链
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/about/
+                  
+                  
+                  
+                    id="about"
+                  >
+                  
+                    <i class='fas fa-info-circle fa-fw'></i>
+                  
+                  关于
+                </a>
+                
+              </li>
+            
+          
+          
+				</ul>
+			</div>
+
+      
+        <div class="m_search">
+          <form name="searchform" class="form u-search-form">
+            <i class="icon fas fa-search fa-fw"></i>
+            <input type="text" class="input u-search-input" placeholder="搜索" />
+          </form>
+        </div>
+      
+
+			<ul class='switcher h-list'>
+				
+					<li><a class="s-search flat-btn fas fa-search fa-fw" target="_self" href='javascript:void(0)'></a></li>
+				
+				<li><a class="s-menu flat-btn fas fa-bars fa-fw" target="_self" href='javascript:void(0)'></a></li>
+			</ul>
+		</div>
+	</div>
+</header>
+<ul class="menu-phone navigation white-box">
+  
+  
+    <li>
+      <a class="flat-box" href=/
+        
+        
+        
+          id="home"
+        >
+        
+          <i class='fas fa-rss fa-fw'></i>
+        
+        博客
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/categories/
+        
+        
+        
+          id="categories"
+        >
+        
+          <i class='fas fa-folder-open fa-fw'></i>
+        
+        分类
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/tags/
+        
+        
+        
+          id="tags"
+        >
+        
+          <i class='fas fa-tags fa-fw'></i>
+        
+        标签
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/archives/
+        
+        
+        
+          id="archives"
+        >
+        
+          <i class='fas fa-archive fa-fw'></i>
+        
+        归档
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/404.html
+        
+        
+        
+          id="404html"
+        >
+        
+          <i class='fas fa-link fa-fw'></i>
+        
+        友链
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/about/
+        
+        
+        
+          id="about"
+        >
+        
+          <i class='fas fa-info-circle fa-fw'></i>
+        
+        关于
+      </a>
+    </li>
+  
+</ul>
+<script>setLoadingBarProgress(40);</script>
+
+
+
+  <div class="l_body nocover">
+    <div class='body-wrapper'>
+      
+
+<div class='l_main'>
+  
+
+  
+    <article id="post" class="post white-box shadow floatable article-type-post" itemscope itemprop="blogPost">
+      
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  
+    <h1 class="title">
+      <a href="/JSR310%E6%97%A5%E6%9C%9F%E7%B1%BBapi%E8%A7%A3%E6%9E%90.html">
+        JSR310日期类api解析
+      </a>
+    </h1>
+  
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/java/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>java</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2020年6月30日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+      <section class="article typo">
+        <div class="article-entry" itemprop="articleBody">
+          
+          <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>之前在项目中零零散散的用到过java8新推的JSR310的日期规范，主要是<code>rt.jar</code>下的<code>java.time</code>的使用，因为实在是太好用了，所以本人誓要抽空系统的整理一遍。</p>
+<h2 id="时区的理解"><a href="#时区的理解" class="headerlink" title="时区的理解"></a>时区的理解</h2><p>1863年，国际上首次出现时区的概念。时区通过设立一个区域的标准时间部分地解决了这个问题。世界各国位于地球不同位置上，因此不同国家，特别是东西跨度大的国家日出、日落时间必定有所偏差，这些偏差就是所谓的时差。</p>
+<p>全球分为24个时区，东西各12个时区（中国位于东八区即北京时间）。</p>
+<p>如果时间是以协调世界时<red>UTC</red>表示，则在时间后面直接加上一个“Z”（不加空格）。“Z”是协调世界时中0时区的标志。因此，“09:30 UTC”就写作“09:30Z”或是“0930Z”。“14:45:15 UTC”则为“14:45:15Z”或“144515Z”。UTC时间也被叫做祖鲁时间，因为在北约音标字母中用“Zulu”表示“Z”。</p>
+<p>同样的，格林尼治标准时间<red>GMT</red>的正午是指当平太阳横穿格林尼治子午线时（也就是在格林尼治上空最高点时）的时间。</p>
+<p><code>GMT+8</code>或者<code>UTC+8</code>均可视为中国时间，不过推荐用UTC+8因为地球每天的自转是有些不规则的，而且正在缓慢减速，因此格林尼治平时基于天文观测本身的缺陷，已经被原子钟报时的协调世界时（UTC）所取代。</p>
+<a id="more"></a>
+
+<p>有很多用缩写字母表示的时区，例如“EST、WST、CST”等。但是它们并不是ISO 8601标准的一部分，不应单独用它们作为时区的标识,<b>其中 CST (<code>China Standard Time</code>）即中国标准时间，CST = UCT+8/GMT+8</b></p>
+<h3 id="jdk时区的使用"><a href="#jdk时区的使用" class="headerlink" title="jdk时区的使用"></a>jdk时区的使用</h3><p>时区ID，例如Europe/Paris、Asia/Shanghia。<br>ZoneId用于标识用于在Instant和之间转换的规则LocalDateTime。有两种不同的ID类型：</p>
+<ul>
+<li>固定偏移量-与UTC /格林威治标准时间完全抵消的偏移量，所有本地日期时间都使用相同的偏移量</li>
+<li>地理区域-适用于从UTC /格林威治中查找偏移量的一组特定规则的区域</li>
+</ul>
+<p>大多数固定偏移量由ZoneOffset表示，它是以UTC/GMT为基准的偏移时间量，它有两种类型的表达方式</p>
+<h4 id="固定偏移量-ZoneOffset"><a href="#固定偏移量-ZoneOffset" class="headerlink" title="固定偏移量-ZoneOffset"></a>固定偏移量-ZoneOffset</h4><p>它可以由“ Z”和以“ +”或“-”开头的ID组成</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Z（即表示UTC&#x2F;GMT）</span><br><span class="line">+h&#x2F;-h (在UTC基础上偏移几个小时，比如中国位于东八区则表示为+8)</span><br><span class="line">+hh&#x2F;-hh </span><br><span class="line">+hh:mm&#x2F;-hh:mm</span><br><span class="line">+hh:mm:ss&#x2F;-hh:mm:ss</span><br><span class="line">+hhmmss&#x2F;-hhmmss</span><br></pre></td></tr></table></figure>
+<p>以jdk中ZoneOffset#of(String zoneId)举几个例子:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//协调世界时</span></span><br><span class="line">ZoneOffset zoneOffset = ZoneOffset.of(<span class="string">"Z"</span>);</span><br><span class="line"><span class="comment">//东八区</span></span><br><span class="line">zoneOffset = ZoneOffset.of(<span class="string">"+08:00"</span>);</span><br><span class="line"><span class="comment">//西八区</span></span><br><span class="line">zoneOffset = ZoneOffset.of(<span class="string">"-8"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>当然也可以用静态方法ZoneId#of(String zoneId)，它会逐步解析入参规则，匹配固定偏移量或者地理区域</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> ZoneId <span class="title">of</span><span class="params">(String var0, <span class="keyword">boolean</span> var1)</span> </span>&#123;</span><br><span class="line">        Objects.requireNonNull(var0, <span class="string">"zoneId"</span>);</span><br><span class="line">        <span class="keyword">if</span> (var0.length() &gt; <span class="number">1</span> &amp;&amp; !var0.startsWith(<span class="string">"+"</span>) &amp;&amp; !var0.startsWith(<span class="string">"-"</span>)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!var0.startsWith(<span class="string">"UTC"</span>) &amp;&amp; !var0.startsWith(<span class="string">"GMT"</span>)) &#123;</span><br><span class="line">                <span class="keyword">return</span> (ZoneId)(var0.startsWith(<span class="string">"UT"</span>) ? ofWithPrefix(var0, <span class="number">2</span>, var1) : ZoneRegion.ofId(var0, var1));</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> ofWithPrefix(var0, <span class="number">3</span>, var1);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> ZoneOffset.of(var0);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="地理区域-ZoneRegion"><a href="#地理区域-ZoneRegion" class="headerlink" title="地理区域-ZoneRegion"></a>地理区域-ZoneRegion</h4><p>地址区域表示类<code>java.time.ZoneRegion</code>,不过其<code>ZoneRegion#ofId</code>是default修饰，所以我们只能通过<code>ZoneId#of</code>方法去设置地理区域，常用格式为：洲(州、国家)/城市.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ZoneId zoneId = ZoneId.systemDefault();</span><br><span class="line">System.out.println(zoneId);</span><br></pre></td></tr></table></figure>
+<p>本人在上海，所以这里会打印出来<code>Asia/Shanghai</code></p>
+<h2 id="JSR310常用Api"><a href="#JSR310常用Api" class="headerlink" title="JSR310常用Api"></a>JSR310常用Api</h2><p>在说JSR310的新特性之前不得不吐槽jdk8之前日期类非人类的设计，比如</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Date date = <span class="keyword">new</span> Date(<span class="number">2020</span>,<span class="number">7</span>,<span class="number">1</span>);</span><br><span class="line">System.out.println(date);</span><br></pre></td></tr></table></figure>
+<p>这里打印出来的是：<code>Sun Aug 01 00:00:00 CST 3920</code>,我这里year还得减去1900…同样的定义的7月份输出却是8月份(Aug)，可读性极差。<br>所以我们不得不去Calendar类去表示</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Calendar calendar = Calendar.getInstance();</span><br><span class="line">calendar.set(<span class="number">2020</span>, Calendar.JULY, <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>我们不必去考虑年份减去1900,然而Calendar.JULY代表着7月，数字却是6…</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> JANUARY = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> FEBRUARY = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MARCH = <span class="number">2</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> APRIL = <span class="number">3</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MAY = <span class="number">4</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> JUNE = <span class="number">5</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> JULY = <span class="number">6</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> AUGUST = <span class="number">7</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SEPTEMBER = <span class="number">8</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> OCTOBER = <span class="number">9</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> NOVEMBER = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> DECEMBER = <span class="number">11</span>;</span><br></pre></td></tr></table></figure>
+<p>这种令人无语的设计，让我代码写着都膈应。<b>当然最重要的是，JSR310之前的设计很多类的属性都是可变的，而新增的日期时间类都是不可变类，每次通过其方法更变或者修改都是返回一个全新的对象，因此它们都是线程安全的。</b></p>
+<h3 id="Clock"><a href="#Clock" class="headerlink" title="Clock"></a>Clock</h3><p>clock即时钟，用于使用时区访问当前时刻，日期和时间。<br>此类的实例用于查找当前时刻,可以使用存储的时区来解释当前时刻以查找当前日期和时间。因此,可以使用时钟代替System.currentTimeMillis() 和TimeZone.getDefault()。<br><code>java.time.Clock</code>提供以下的实例方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取用于创建日期和时间的时区</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> ZoneId <span class="title">getZone</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取时钟的当前时刻</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> Instant <span class="title">instant</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取时钟的当前毫秒瞬间</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">millis</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//返回带有不同时区的此时钟的副本</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> Clock <span class="title">withZone</span><span class="params">(ZoneId zoneId)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>clock包含了四个实现类<code>FixedClock、OffsetClock、SystemClock、TickClock</code>,下面的静态方法都源于这四个实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获得始终返回相同时刻的时钟</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Clock <span class="title">fixed</span><span class="params">(Instant fixedInstant, ZoneId zone)</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取一个时钟，该时钟从基础时钟返回瞬时值，并添加指定的时间偏移量</span></span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Clock  <span class="title">offset</span><span class="params">(Clock baseClock, Duration offsetDuration)</span></span></span><br><span class="line"><span class="function"><span class="comment">//获得指定时区的时钟</span></span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Clock  <span class="title">system</span><span class="params">(ZoneId zone)</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取当前时刻的时钟，并使用默认时区将其转换为日期和时间</span></span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Clock  <span class="title">systemDefaultZone</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取当前时刻的时钟，并使用UTC时区转换为日期和时间</span></span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Clock  <span class="title">systemUTC</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取一个时钟，该时钟返回从指定时钟被截断到指定持续时间的最接近值的瞬间</span></span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Clock  <span class="title">tick</span><span class="params">(Clock baseClock, Duration tickDuration)</span></span></span><br><span class="line"><span class="function"><span class="comment">//获得一个时钟，该时钟使用指定时区并返回整分钟的当前时刻的时钟</span></span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Clock  <span class="title">tickMinutes</span><span class="params">(ZoneId zone)</span></span></span><br><span class="line"><span class="function"><span class="comment">//获取一个时钟，该时钟使用指定时区并返回整秒内的当前时刻的时钟</span></span></span><br><span class="line"><span class="function"><span class="keyword">static</span> Clock  <span class="title">tickSeconds</span><span class="params">(ZoneId zone)</span></span></span><br></pre></td></tr></table></figure>
+<p>看上去tickMinutes/tickSeconds的api注释比较拗口 其实tickSeconds计量到秒，tickMinutes计量到分（秒部分会置为0）</p>
+<h3 id="Instant、LocalDate、LocalTime、LocalDateTime"><a href="#Instant、LocalDate、LocalTime、LocalDateTime" class="headerlink" title="Instant、LocalDate、LocalTime、LocalDateTime"></a>Instant、LocalDate、LocalTime、LocalDateTime</h3><ul>
+<li>Instant: 瞬时时间，等价于以前的System.currentTimeMillis()。</li>
+<li>LocalDate: ISO-8601日历系统中没有时区的日期，例如2020-07-01,只代表年-月-日</li>
+<li>LocalTime: ISO-8601日历系统中没有时区的时间，例如20:00:00，只代表时-分-秒</li>
+<li>LocalDateTime: ISO-8601日历系统中没有时区的日期时间，例如2020-07-01T20:00:00，通常被视为年-月-日-时-分-秒</li>
+</ul>
+<p>我们经常需要将Date类型转化为JSR310中的日期类计算</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LocalDate <span class="title">getLocalDate</span><span class="params">(Date date)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.of(<span class="string">"+8"</span>)).toLocalDate();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LocalTime <span class="title">getLocalTime</span><span class="params">(Date date)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.of(<span class="string">"+8"</span>)).toLocalTime();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> LocalDateTime <span class="title">getLocalDateTime</span><span class="params">(Date date)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.of(<span class="string">"+8"</span>)).toLocalDateTime();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以利用JSR310新增的类用来比较两个日期是否处于同一天</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">compareTo</span><span class="params">(Date date1,Date date2)</span> </span>&#123;</span><br><span class="line">    LocalDate time1 = getLocalDate(date1);</span><br><span class="line">    LocalDate time2 = getLocalDate(date2);</span><br><span class="line">    <span class="keyword">return</span> time2.getYear() == time1.getYear() &amp;&amp; time2.getMonth().compareTo(time1.getMonth()) == <span class="number">0</span> &amp;&amp; time2.getDayOfMonth() == time1.getDayOfMonth();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们也可以处理String转Date、Date转String的格式处理</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Date <span class="title">getDate</span><span class="params">(String date)</span></span>&#123;</span><br><span class="line">    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(<span class="string">"EEE MMM dd HH:mm:ss zzz yyyy"</span>,Locale.CHINA);</span><br><span class="line">    LocalDateTime time = LocalDateTime.parse(date,formatter);</span><br><span class="line">    <span class="keyword">return</span> Date.from(time.atZone(ZoneId.systemDefault()).toInstant());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">getString</span><span class="params">(Date date)</span></span>&#123;</span><br><span class="line">    LocalDateTime time = LocalDateTime.ofInstant(date.toInstant,ZoneId.systemDefault());</span><br><span class="line">    <span class="keyword">return</span> DateTimeFormatter.ofPattern(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>).format(time);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>等等…参照jkd8 api文档，这里就不一一列举了。</p>
+<h3 id="OffsetTime、OffsetDateTime、ZonedDateTime"><a href="#OffsetTime、OffsetDateTime、ZonedDateTime" class="headerlink" title="OffsetTime、OffsetDateTime、ZonedDateTime"></a>OffsetTime、OffsetDateTime、ZonedDateTime</h3><ul>
+<li>OffsetTime: ISO-8601日历系统中的UTC/GMT带偏移量的时间，例如20:00:00+08:00</li>
+<li>OffsetDateTime: ISO-8601日历系统中的UTC/GMT带偏移量的时间，例如2020-07-01T20:00:00+08:00 (不支持ZoneRegion的时区格式)</li>
+<li>ZonedDateTime: ISO-8601日历系统中带有时区的日期时间，例如2020-07-01T20:00:00+08:00 Europe/Paris (支持ZoneRegion的时区格式)</li>
+</ul>
+<p>OffsetTime可以类比LocalTime,OffsetDateTime/ZonedDateTime可以类比LocalDateTime，相比之下，他们多存储了一个时区时间偏移量(zone offset)属性，其余的api方法相差不大。</p>
+<h3 id="Duration"><a href="#Duration" class="headerlink" title="Duration"></a>Duration</h3><p>duration是一个基于时间的时间量，例如’34.5 seconds’，它用来表示两个瞬时时间的时间段。</p>
+<p>举个最基本的例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1天时差 类似的还有如ofHours()  </span></span><br><span class="line">Duration d2 = Duration.ofDays(<span class="number">1</span>);  </span><br><span class="line">System.out.println(d2.toDays());  </span><br><span class="line"></span><br><span class="line">console print: <span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//比较两个日期的时间差</span></span><br><span class="line"><span class="keyword">long</span> now = System.currentTimeMillis();</span><br><span class="line">Instant instant1 = Instant.ofEpochMilli(now-<span class="number">1</span>);</span><br><span class="line">Instant instant2 = Instant.ofEpochMilli(now);</span><br><span class="line">Duration duration = Duration.between(instant1,instant2);</span><br><span class="line">System.out.println(duration.toMillis());</span><br><span class="line"></span><br><span class="line">console print: <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Year、YearMonth、MonthDay、Period"><a href="#Year、YearMonth、MonthDay、Period" class="headerlink" title="Year、YearMonth、MonthDay、Period"></a>Year、YearMonth、MonthDay、Period</h3><ul>
+<li>Year: 基于ISO-8601日期系统下表示年份，例如2020</li>
+<li>YearMonth: ISO-8601日历系统中的一年月，例如2020-07</li>
+<li>MonthDay: ISO-8601日历系统中的一个月日，例如–07-01</li>
+<li>Period: ISO-8601日历系统中基于日期的时间量，例如”2年，3个月和4天”</li>
+</ul>
+<p>这里主要针对Period即周期做个简单的例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//表示前1天</span></span><br><span class="line">Period period1 = Period.ofDays(<span class="number">1</span>);  </span><br><span class="line">System.out.println(period1);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">console print: P1D</span><br><span class="line"><span class="comment">//2年5个月前  </span></span><br><span class="line">Period period2 = Period.of(<span class="number">2</span>, <span class="number">5</span>, <span class="number">0</span>);  </span><br><span class="line">System.out.println(period2);</span><br><span class="line"></span><br><span class="line">console print: P2Y5M</span><br></pre></td></tr></table></figure>
+
+<h3 id="Chronology"><a href="#Chronology" class="headerlink" title="Chronology"></a>Chronology</h3><p>Chronology:主日期和时间API建立在ISO日历系统上,年表在后台进行操作，以表示日历系统的一般概念。主要用于对年历系统的支持，是java.util.Calendar的替代者。使用方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Chronology c  = HijrahChronology.INSTANCE;  </span><br><span class="line">ChronoLocalDateTime d = c.localDateTime(LocalDateTime.now());  </span><br><span class="line">System.out.println(d);</span><br><span class="line"></span><br><span class="line">console.print: Hijrah-umalqura AH <span class="number">1441</span>-<span class="number">11</span>-<span class="number">10</span>T18:<span class="number">10</span>:<span class="number">35.528</span></span><br></pre></td></tr></table></figure>
+<h2 id="Spring对JSR310的支持"><a href="#Spring对JSR310的支持" class="headerlink" title="Spring对JSR310的支持"></a>Spring对JSR310的支持</h2><p>Spring Framework 4.0提供了对<code>java.time（JSR-310）</code>的相关类的支持</p>
+<p>在springboot工程为背景，我们定义一个实体类如下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Time</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@DateTimeFat</span>(pattern = <span class="string">"yyyy-MM-dd HH:mm:ss"</span>)</span><br><span class="line">    <span class="keyword">private</span> LocalDateTime localDateTime;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@DateTimeFormat</span>(pattern = <span class="string">"yyyy-MM-dd"</span>)</span><br><span class="line">    <span class="keyword">private</span> LocalDate localDate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@DateTimeFormat</span>(pattern = <span class="string">"HH:mm:ss"</span>)</span><br><span class="line">    <span class="keyword">private</span> LocalTime localTime;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编写web层demo,调用<code>localhost:8080/test?localDateTime=2020-07-02 20:00:00&localDate=2020-07-02&localTime=20:00:00</code>，spring会自动进行类型转化。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GetMapping</span>(value = <span class="string">"/test"</span>)</span><br><span class="line"><span class="meta">@ResponseBody</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Time <span class="title">getTime</span><span class="params">(Time time)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> time;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>postMan测试:</p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/java/1.png" alt="result"></p>
+<p>或者我们可以使用Spring默认使用Jackson作为json的序列化工具，例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Time</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@JsonDeserialize</span>(using = LocalDateTimeDeserializer<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    @<span class="title">JsonSerialize</span>(<span class="title">using</span> </span>= LocalDateTimeSerializer<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    <span class="title">private</span> <span class="title">LocalDateTime</span> <span class="title">localDateTime</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@JsonDeserialize</span>(using = LocalDateDeserializer<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    @<span class="title">JsonSerialize</span>(<span class="title">using</span> </span>= LocalDateSerializer<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    <span class="title">private</span> <span class="title">LocalDate</span> <span class="title">localDate</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@JsonDeserialize</span>(using = LocalTimeDeserializer<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    @<span class="title">JsonSerialize</span>(<span class="title">using</span> </span>= LocalTimeSerializer<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">    <span class="title">private</span> <span class="title">LocalTime</span> <span class="title">localTime</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>补充说明: <b>对于常用的ORM框架，新版的mybatis也已经内置了mybatis-typehandlers-jsr310的依赖，所以对于数据库的增删改查也可以无感使用JSR310日期类开发啦！</b></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://docs.oracle.com/javase/8/docs/api/java/time/package-summary.html" target="_blank" rel="noopener">oracle java.time api</a></li>
+<li><a href="https://zh.wikipedia.org/wiki/%E6%97%B6%E5%8C%BA" target="_blank" rel="noopener">维基百科-时区的定义</a></li>
+</ul>
+
+          
+            <br>
+            
+  
+    
+    
+
+<section class="widget copyright  desktop mobile">
+  <div class='content'>
+    
+      <blockquote>
+        
+          
+            <p>博客内容遵循 署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</p>
+
+          
+        
+          
+            <p>本文永久链接是：<a href=https://sillybilly-share.top/JSR310%E6%97%A5%E6%9C%9F%E7%B1%BBapi%E8%A7%A3%E6%9E%90.html>https://sillybilly-share.top/JSR310%E6%97%A5%E6%9C%9F%E7%B1%BBapi%E8%A7%A3%E6%9E%90.html</a></p>
+          
+        
+      </blockquote>
+    
+  </div>
+</section>
+
+  
+
+  
+    
+    
+
+<section class="widget qrcode  desktop mobile">
+  
+
+  <div class='content article-entry'>
+    
+  </div>
+</section>
+
+  
+
+
+          
+        </div>
+        
+          
+
+
+  <section class='meta' id="footer-meta">
+    <div class='new-meta-box'>
+      
+        
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2022-11-24T09:35:09+08:00">
+  <a class='notlink'>
+    <i class="fas fa-save" aria-hidden="true"></i>
+    <p>更新于：2022年11月24日</p>
+  </a>
+</div>
+
+        
+      
+        
+          
+  
+  <div class="new-meta-item meta-tags"><a class="tag" href="/tags/java/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>java</p></a></div> <div class="new-meta-item meta-tags"><a class="tag" href="/tags/date/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>date</p></a></div>
+
+
+        
+      
+        
+          
+
+        
+      
+        
+          
+  <div class="new-meta-item share -mob-share-list">
+  <div class="-mob-share-list share-body">
+    
+      
+        <a class="-mob-share-qq" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://connect.qq.com/widget/shareqq/index.html?url=https://sillybilly-share.top/JSR310%E6%97%A5%E6%9C%9F%E7%B1%BBapi%E8%A7%A3%E6%9E%90.html&title=JSR310日期类api解析 - 微笑流浪&summary=前提之前在项目中零零散散的用到过java8新推的JSR310的日期规范，主要是rt.jar下的java.time的使用，因为实在是太好用了，所以本人誓要抽空系统的整理一遍。
+时区的理解1863年，国际上首次出现时区的概念。时区通过设立一个区域的标准时间部分地解决了这个问题。世界各国位于地球不同位置上，因此不同国家，特别是东西跨度大的国家日出、日落时间必定有所偏差，这些偏差就是所谓的时差。
+全球分为24个时区，东西各12个时区（中国位于东八区即北京时间）。
+如果时间是以协调世界时UTC表示，则在时间后面直接加上一个“Z”（不加空格）。“Z”是协调世界时中0时区的标志。因此，“09:30 UTC”就写作“09:30Z”或是“0930Z”。“14:45:15 UTC”则为“14:45:15Z”或“144515Z”。UTC时间也被叫做祖鲁时间，因为在北约音标字母中用“Zulu”表示“Z”。
+同样的，格林尼治标准时间GMT的正午是指当平太阳横穿格林尼治子午线时（也就是在格林尼治上空最高点时）的时间。
+GMT+8或者UTC+8均可视为中国时间，不过推荐用UTC+8因为地球每天的自转是有些不规则的，而且正在缓慢减速，因此格林尼治平时基于天文观测本身的缺陷，已经被原子钟报时的协调世界时（UTC）所取代。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qq.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-qzone" title="" rel="external nofollow noopener noreferrer"
+          
+          href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://sillybilly-share.top/JSR310%E6%97%A5%E6%9C%9F%E7%B1%BBapi%E8%A7%A3%E6%9E%90.html&title=JSR310日期类api解析 - 微笑流浪&summary=前提之前在项目中零零散散的用到过java8新推的JSR310的日期规范，主要是rt.jar下的java.time的使用，因为实在是太好用了，所以本人誓要抽空系统的整理一遍。
+时区的理解1863年，国际上首次出现时区的概念。时区通过设立一个区域的标准时间部分地解决了这个问题。世界各国位于地球不同位置上，因此不同国家，特别是东西跨度大的国家日出、日落时间必定有所偏差，这些偏差就是所谓的时差。
+全球分为24个时区，东西各12个时区（中国位于东八区即北京时间）。
+如果时间是以协调世界时UTC表示，则在时间后面直接加上一个“Z”（不加空格）。“Z”是协调世界时中0时区的标志。因此，“09:30 UTC”就写作“09:30Z”或是“0930Z”。“14:45:15 UTC”则为“14:45:15Z”或“144515Z”。UTC时间也被叫做祖鲁时间，因为在北约音标字母中用“Zulu”表示“Z”。
+同样的，格林尼治标准时间GMT的正午是指当平太阳横穿格林尼治子午线时（也就是在格林尼治上空最高点时）的时间。
+GMT+8或者UTC+8均可视为中国时间，不过推荐用UTC+8因为地球每天的自转是有些不规则的，而且正在缓慢减速，因此格林尼治平时基于天文观测本身的缺陷，已经被原子钟报时的协调世界时（UTC）所取代。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qzone.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-weibo" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://service.weibo.com/share/share.php?url=https://sillybilly-share.top/JSR310%E6%97%A5%E6%9C%9F%E7%B1%BBapi%E8%A7%A3%E6%9E%90.html&title=JSR310日期类api解析 - 微笑流浪&summary=前提之前在项目中零零散散的用到过java8新推的JSR310的日期规范，主要是rt.jar下的java.time的使用，因为实在是太好用了，所以本人誓要抽空系统的整理一遍。
+时区的理解1863年，国际上首次出现时区的概念。时区通过设立一个区域的标准时间部分地解决了这个问题。世界各国位于地球不同位置上，因此不同国家，特别是东西跨度大的国家日出、日落时间必定有所偏差，这些偏差就是所谓的时差。
+全球分为24个时区，东西各12个时区（中国位于东八区即北京时间）。
+如果时间是以协调世界时UTC表示，则在时间后面直接加上一个“Z”（不加空格）。“Z”是协调世界时中0时区的标志。因此，“09:30 UTC”就写作“09:30Z”或是“0930Z”。“14:45:15 UTC”则为“14:45:15Z”或“144515Z”。UTC时间也被叫做祖鲁时间，因为在北约音标字母中用“Zulu”表示“Z”。
+同样的，格林尼治标准时间GMT的正午是指当平太阳横穿格林尼治子午线时（也就是在格林尼治上空最高点时）的时间。
+GMT+8或者UTC+8均可视为中国时间，不过推荐用UTC+8因为地球每天的自转是有些不规则的，而且正在缓慢减速，因此格林尼治平时基于天文观测本身的缺陷，已经被原子钟报时的协调世界时（UTC）所取代。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/weibo.png">
+          
+        </a>
+      
+    
+  </div>
+</div>
+
+
+
+        
+      
+    </div>
+  </section>
+
+
+        
+        
+          <div class="prev-next">
+            
+              <a class='prev' href='/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.html'>
+                <p class='title'><i class="fas fa-chevron-left" aria-hidden="true"></i>记一次内存溢出的解决方案</p>
+                <p class='content'>前提在前文netty ButeBuf使用中可以了解到JVM主要由堆、方法区、虚拟机栈、本地方法栈、程序计数器组成。由于在最近的项目中遇到了堆/堆外内存溢出(Java heap space/Dir...</p>
+              </a>
+            
+            
+              <a class='next' href='/%E8%81%8A%E4%B8%80%E8%81%8A%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E7%9A%84%E4%B8%8D%E5%90%8C%E5%AE%9E%E7%8E%B0.html'>
+                <p class='title'>聊一聊分布式锁的不同实现<i class="fas fa-chevron-right" aria-hidden="true"></i></p>
+                <p class='content'>前提在平时遇到资源抢占的问题时，我们经常使用synchronized加锁的方式去实现资源同步，简单粗暴，并且在对性能要求不高的业务中实现起来屡试不爽。然而就目前而言，大部分的线上项目，为了避免单...</p>
+              </a>
+            
+          </div>
+        
+      </section>
+    </article>
+  
+
+  
+    <!-- 显示推荐文章和评论 -->
+
+
+
+  <article class="post white-box comments shadow floatable">
+    <section class="article typo">
+      <p ct><i class='fas fa-comments'></i> 评论</p>
+      
+      
+      
+        <section id="comments">
+          <div id="lv-container" data-id="city" data-uid="MTAyMC80OTQ2OS8yNTk2MQ==">
+            <noscript><div><i class='fas fa-exclamation-triangle'>&nbsp;无法加载Livere评论系统，请确保您的网络能够正常访问。</div></noscript>
+          </div>
+        </section>
+      
+      
+      
+    </section>
+  </article>
+
+
+  
+
+
+
+
+<!-- 根据页面mathjax变量决定是否加载MathJax数学公式js -->
+
+
+
+  <script>
+    window.subData = {
+      title: 'JSR310日期类api解析',
+      tools: true
+    }
+  </script>
+
+
+</div>
+<aside class='l_side'>
+  
+  
+
+  
+    
+    
+
+
+  <section class="widget toc-wrapper shadow floatable desktop mobile">
+    
+  <header>
+    
+      <i class="fas fa-list fa-fw" aria-hidden="true"></i><span class='name'>本文目录</span>
+    
+  </header>
+
+
+    <div class='content'>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#时区的理解"><span class="toc-text">时区的理解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#jdk时区的使用"><span class="toc-text">jdk时区的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#固定偏移量-ZoneOffset"><span class="toc-text">固定偏移量-ZoneOffset</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#地理区域-ZoneRegion"><span class="toc-text">地理区域-ZoneRegion</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JSR310常用Api"><span class="toc-text">JSR310常用Api</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Clock"><span class="toc-text">Clock</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Instant、LocalDate、LocalTime、LocalDateTime"><span class="toc-text">Instant、LocalDate、LocalTime、LocalDateTime</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OffsetTime、OffsetDateTime、ZonedDateTime"><span class="toc-text">OffsetTime、OffsetDateTime、ZonedDateTime</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Duration"><span class="toc-text">Duration</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Year、YearMonth、MonthDay、Period"><span class="toc-text">Year、YearMonth、MonthDay、Period</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Chronology"><span class="toc-text">Chronology</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Spring对JSR310的支持"><span class="toc-text">Spring对JSR310的支持</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-text">参考</span></a></li></ol>
+    </div>
+  </section>
+
+
+  
+
+
+</aside>
+
+
+  
+  <footer class="clearfix white">
+    <br><br>
+    
+      
+        <div class="aplayer-container">
+          
+
+  
+    <meting-js
+      theme='#1BCDFC'
+      autoplay='false'
+      volume='0.7'
+      loop='all'
+      order='list'
+      fixed='false'
+      list-max-height='340px'
+      server='netease'
+      type='playlist'
+      id='4926244994'
+      list-folded='true'>
+    </meting-js>
+  
+
+
+        </div>
+      
+    
+      
+        <br>
+        <div class="social-wrapper">
+          
+            
+              <a href="/atom.xml"
+                class="social fas fa-rss flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="mailto:1579700874@qq.com"
+                class="social fas fa-envelope flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="https://github.com/silly-billy"
+                class="social fab fa-github flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+        </div>
+      
+    
+      
+        
+          <div><p>博客内容遵循 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener">署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</a></p>
+</div>
+        
+      
+    
+      
+        
+          <div><p>本站使用 <a href="https://volantis.js.org/" target="_blank" rel="noopener">Volantis</a> 作为主题 ， 总访问量为 <span id="busuanzi_value_site_uv"></span> 次</p>
+</div>
+        
+      
+    
+      
+        <div class='copyright'>
+        <p>[Copyright © 2019-2020 silly-billy]</p>
+
+        </div>
+      
+    
+  </footer>
+
+<script>setLoadingBarProgress(80);</script>
+
+
+      <script>setLoadingBarProgress(60);</script>
+    </div>
+    <a class="s-top fas fa-arrow-up fa-fw" href='javascript:void(0)'></a>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.min.js"></script>
+
+
+  <script>
+    
+    var SEARCH_SERVICE = "hexo" || "hexo";
+    var ROOT = "/" || "/";
+    if (!ROOT.endsWith('/')) ROOT += '/';
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/instant_page.js" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.js"></script>
+
+  <script type="text/javascript">
+    $(function() {
+      Waves.attach('.flat-btn', ['waves-button']);
+      Waves.attach('.float-btn', ['waves-button', 'waves-float']);
+      Waves.attach('.float-btn-light', ['waves-button', 'waves-float', 'waves-light']);
+      Waves.attach('.flat-box', ['waves-block']);
+      Waves.attach('.float-box', ['waves-block', 'waves-float']);
+      Waves.attach('.waves-image');
+      Waves.init();
+    });
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/busuanzi.pure.mini.js"></script>
+
+
+
+  
+  
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.backstretch.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var imgs=["https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud.jpg", "https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud-1.jpg"];
+        if ('true' == 'true') {
+          function shuffle(arr){
+            /*From countercurrent-time*/
+            var n = arr.length;
+            while(n--) {
+              var index = Math.floor(Math.random() * n);
+              var temp = arr[index];
+              arr[index] = arr[n];
+              arr[n] = temp;
+            }
+          }
+          shuffle(imgs);
+        }
+        if ('.cover') {
+          $('.cover').backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        } else {
+          $.backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        }
+      });
+    </script>
+  
+
+
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/APlayer.min.js" async></script>
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/Meting.min.js" async></script>
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+      if (typeof LivereTower === 'function') { return; }
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+      e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  </script>
+
+
+
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/app.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/search.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/comment_typing.js"></script>
+
+
+
+<!-- 复制 -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/clipboard.min.js"></script>
+<script>
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="fas fa-copy"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copyed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-clipboard-check');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPYED';
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-exclamation-triangle');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+<!-- fancybox -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.js"></script>
+<script>
+  let LAZY_LOAD_IMAGE = "";
+  $(".article-entry").find("fancybox").find("img").each(function () {
+      var element = document.createElement("a");
+      $(element).attr("data-fancybox", "gallery");
+      $(element).attr("href", $(this).attr("src"));
+      /* 图片采用懒加载处理时,
+       * 一般图片标签内会有个属性名来存放图片的真实地址，比如 data-original,
+       * 那么此处将原本的属性名src替换为对应属性名data-original,
+       * 修改如下
+       */
+       if (LAZY_LOAD_IMAGE) {
+         $(element).attr("href", $(this).attr("data-original"));
+       }
+      $(this).wrap(element);
+  });
+</script>
+
+
+
+
+
+
+  <script>setLoadingBarProgress(100);</script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
