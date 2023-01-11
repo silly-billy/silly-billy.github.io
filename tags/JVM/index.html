@@ -18,7 +18,7 @@
 
   <!-- 页面元数据 -->
   
-    <title>标签：jvm - 微笑流浪</title>
+    <title>标签：JVM - 微笑流浪</title>
   
   
 
@@ -362,8 +362,8 @@
       
         
   <h2 class="title">
-    <a href="/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.html">
-      记一次内存溢出的解决方案
+    <a href="/netty-ByteBuf%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%87%8A%E6%94%BE.html">
+      netty ByteBuf使用与释放
     </a>
   </h2>
 
@@ -388,9 +388,9 @@
             
   
   <div class='new-meta-item category'>
-    <a href='/categories/jvm%E8%B0%83%E4%BC%98/' rel="nofollow">
+    <a href='/categories/netty/' rel="nofollow">
       <i class="fas fa-folder-open" aria-hidden="true"></i>
-      <p>java&nbsp;/&nbsp;jvm调优</p>
+      <p>netty</p>
     </a>
   </div>
 
@@ -401,7 +401,7 @@
             <div class="new-meta-item date">
   <a class='notlink'>
     <i class="fas fa-edit" aria-hidden="true"></i>
-    <p>发布于：2020年7月15日</p>
+    <p>发布于：2020年4月5日</p>
   </a>
 </div>
 
@@ -412,13 +412,13 @@
   <div class="new-meta-item wordcount">
     <a class='notlink'>
       <i class="fas fa-keyboard" aria-hidden="true"></i>
-      <p>字数：1.7k字</p>
+      <p>字数：2.5k字</p>
     </a>
   </div>
   <div class="new-meta-item readtime">
     <a class='notlink'>
       <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-      <p>时长：6分钟</p>
+      <p>时长：9分钟</p>
     </a>
   </div>
 
@@ -440,12 +440,12 @@
 
   <section class="article typo">
     <div class="article-entry" itemprop="articleBody">
-      <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>在前文<a href="https://sillybilly-share.top/netty-ByteBuf%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%87%8A%E6%94%BE.html">netty ButeBuf使用</a>中可以了解到JVM主要由堆、方法区、虚拟机栈、本地方法栈、程序计数器组成。由于在最近的项目中遇到了堆/堆外内存溢出(Java heap space/Direct buffer memory),所以这里结合自身对JVM的了解，讲述如果遇到内存溢出情况，我们应该如何解决。再次引入jvm内存结构图</p>
-<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/netty/jvm.png" alt="JVM Model"></p>
+      <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>在了解netty的byteBuf方法之前，我们需要对JVM的内存分配有一定的认知。这里引用网上的一张JVM内存模型图:</p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/netty/jvm.png" alt="JVM内存模型"></p>
       
         
           <div class="button readmore">
-            <a href="/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.html">
+            <a href="/netty-ByteBuf%E4%BD%BF%E7%94%A8%E4%B8%8E%E9%87%8A%E6%94%BE.html">
               <i class="fas fa-book-open fa-fw" aria-hidden="true"></i> Read More
             </a>
           </div>
