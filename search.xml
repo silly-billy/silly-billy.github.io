@@ -370,9 +370,9 @@
       
       <categories>
           
-          <category> java </category>
-          
           <category> ceph </category>
+          
+          <category> java </category>
           
           <category> oss </category>
           
@@ -383,9 +383,9 @@
       
         <tags>
             
-            <tag> java </tag>
-            
             <tag> ceph </tag>
+            
+            <tag> java </tag>
             
             <tag> oss </tag>
             
@@ -529,9 +529,9 @@
       
       <categories>
           
-          <category> java </category>
-          
           <category> ceph </category>
+          
+          <category> java </category>
           
           <category> oss </category>
           
@@ -542,9 +542,9 @@
       
         <tags>
             
-            <tag> java </tag>
-            
             <tag> ceph </tag>
+            
+            <tag> java </tag>
             
             <tag> oss </tag>
             
