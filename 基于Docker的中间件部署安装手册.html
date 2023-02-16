@@ -598,6 +598,61 @@
 
 </li>
 </ol>
+<h2 id="安装redis主从"><a href="#安装redis主从" class="headerlink" title="安装redis主从"></a>安装<code>redis</code>主从</h2><table>
+<thead>
+<tr>
+<th>ip</th>
+<th>port</th>
+<th>role</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10.10.33.58</td>
+<td>16379</td>
+<td>master</td>
+</tr>
+<tr>
+<td>10.10.33.58</td>
+<td>26379</td>
+<td>sentinel</td>
+</tr>
+<tr>
+<td>10.10.33.59</td>
+<td>16379</td>
+<td>slave</td>
+</tr>
+<tr>
+<td>10.10.33.59</td>
+<td>26379</td>
+<td>sentinel</td>
+</tr>
+<tr>
+<td>10.10.33.60</td>
+<td>16379</td>
+<td>slave</td>
+</tr>
+<tr>
+<td>10.10.33.60</td>
+<td>26379</td>
+<td>sentinel</td>
+</tr>
+</tbody></table>
+<p>下载<code>redis</code>镜像包，安装版本：7.0.4</p>
+<p>新增主、从节点<code>redis.conf</code>配置</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># bind 127.0.0.1</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 开启集群 这里是主从 不需要开启</span></span><br><span class="line"><span class="comment">#cluster-enabled yes</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 默认yes，开启保护模式，限制为本地访问</span></span><br><span class="line"><span class="meta">protected-mode</span> <span class="string">no</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 默认no，改为yes意为以守护进程方式启动，可后台运行，除非kill进程，改为yes会使配置文件方式启动redis失败</span></span><br><span class="line"><span class="attr">daemonize</span> <span class="string">no</span></span><br><span class="line"></span><br><span class="line"><span class="attr">dir</span> <span class="string">./</span></span><br><span class="line"></span><br><span class="line"><span class="attr">appendonly</span> <span class="string">yes</span></span><br><span class="line"></span><br><span class="line"><span class="attr">logfile</span> <span class="string">"access.log"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># redis密码配置</span></span><br><span class="line"><span class="attr">requirepass</span> <span class="string">sillybilly@2022</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改端口号</span></span><br><span class="line"><span class="attr">port</span> <span class="string">16379</span></span><br><span class="line"></span><br><span class="line"><span class="comment">############################以下配置为从服务器配置，主服务器无需配置#################</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#下面的IP和端口号为表示为redis主服务器</span></span><br><span class="line"><span class="comment"># replicaof 10.10.33.58 16379</span></span><br><span class="line"><span class="comment"># 如果主服务器配置了密码，则需要添加如下命令（zsrj@2022表示redis主服务器的密码）</span></span><br><span class="line"><span class="comment"># masterauth sillybilly@2022</span></span><br></pre></td></tr></table></figure>
+
+<p>新增哨兵<code>sentinel.conf</code>配置</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 哨兵使用的端口号,默认是26379，可以更改</span></span><br><span class="line"><span class="attr">port</span> <span class="string">26379</span></span><br><span class="line"><span class="comment"># 文件存储位置</span></span><br><span class="line"><span class="attr">dir</span> <span class="string">"/"</span></span><br><span class="line"><span class="comment"># 日志保存的文件路径（该文件路径必须存在）</span></span><br><span class="line"><span class="attr">logfile</span> <span class="string">"/sentinel.log"</span></span><br><span class="line"><span class="comment"># 哨兵监控IP为10.10.33.58端口号为16379的redis主服务器，主服务器名称为redis-master，最后的数字表示数量，例如3台哨兵,其中有2台哨兵认为redis主服务器已经宕机，则主机已经宕机，否则不认为redis的主服务器宕机</span></span><br><span class="line"><span class="attr">sentinel</span> <span class="string">monitor redis-master 10.10.33.58 16379 2</span></span><br><span class="line"><span class="comment"># 在指定的毫秒数内，若主节点没有应答哨兵的 PING 命令，此时哨兵认为服务器主观下线，默认时间为 30 秒。</span></span><br><span class="line"><span class="attr">sentinel</span> <span class="string">down-after-milliseconds redis-master 5000</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 如果主服务器配置了密码，则哨兵也必须配置密码，否则哨兵无法对主从服务器进行监控，该密码与主服务器密码一致</span></span><br><span class="line"><span class="attr">sentinel</span> <span class="string">auth-pass redis-master sillybilly@2022</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># redis哨兵密码</span></span><br><span class="line"><span class="attr">requirepass</span> <span class="string">sillybilly@2022</span></span><br></pre></td></tr></table></figure>
+
+<p>创建并启动主、从容器</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 主节点 10.10.33.58</span></span><br><span class="line">docker run --net host --name redis-icp-master \</span><br><span class="line">-v /home/redis/redis.conf:/redis.conf \</span><br><span class="line">-v /home/redis/data:/data \</span><br><span class="line">--privileged=true -d redis:7.0.4 redis-server /redis.conf</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 从节点 10.10.33.59</span></span><br><span class="line">docker run --net host --name redis-icp-slave1 \</span><br><span class="line">-v /home/redis/redis.conf:/redis.conf \</span><br><span class="line">-v /home/redis/data:/data \</span><br><span class="line">--privileged=true -d redis:7.0.4 redis-server /redis.conf</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 从节点 10.10.33.60</span></span><br><span class="line">docker run --net host --name redis-icp-slave2 \</span><br><span class="line">-v /home/redis/redis.conf:/redis.conf \</span><br><span class="line">-v /home/redis/data:/data \</span><br><span class="line">--privileged=true -d redis:7.0.4 redis-server /redis.conf</span><br></pre></td></tr></table></figure>
+
+<p>创建并启动哨兵</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 启动从节点1哨兵 10.10.33.58</span></span><br><span class="line">docker run --net host --name redis-icp-sentinel1 \</span><br><span class="line">-v /home/redis/sentinel.conf:/sentinel.conf \</span><br><span class="line">-d redis:7.0.4  redis-sentinel /sentinel.conf</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 启动从节点2哨兵 10.10.33.59</span></span><br><span class="line">docker run --net host --name redis-icp-sentinel2 \</span><br><span class="line">-v /home/redis/sentinel.conf:/sentinel.conf \</span><br><span class="line">-d redis:7.0.4  redis-sentinel /sentinel.conf</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 启动从节点3哨兵 10.10.33.60</span></span><br><span class="line">docker run --net host --name redis-icp-sentinel3 \</span><br><span class="line">-v /home/redis/sentinel.conf:/sentinel.conf \</span><br><span class="line">-d redis:7.0.4  redis-sentinel /sentinel.conf</span><br></pre></td></tr></table></figure>
+
+<p>环境验证</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 进入主节点容器内部 containerId 为58环境master节点容器id</span></span><br><span class="line">docker exec -it [containerId] bash</span><br><span class="line"><span class="meta">#</span><span class="bash"> 进入redis命令列界面</span></span><br><span class="line">redis-cli -a sillybilly@2022 -p 16379</span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看主从信息</span></span><br><span class="line">info replication</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 进入哨兵容器内部 containerId 为任意环境哨兵容器id</span></span><br><span class="line">docker exec -it [containerId] bash</span><br><span class="line"><span class="meta">#</span><span class="bash"> 进入redis命令列界面</span></span><br><span class="line">redis-cli -a sillybilly@2022 -p 16379</span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看哨兵监控信息</span></span><br><span class="line">info sentinel</span><br></pre></td></tr></table></figure>
+
 <h2 id="未完待补充"><a href="#未完待补充" class="headerlink" title="未完待补充"></a>未完待补充</h2><p>…</p>
 <h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><h3 id="docker命令"><a href="#docker命令" class="headerlink" title="docker命令"></a>docker命令</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 获取Docker中运行的组件的内网IP</span></span><br><span class="line">docker inspect --format='&#123;&#123;.NetworkSettings.IPAddress&#125;&#125;' 【容器实例名称】</span><br></pre></td></tr></table></figure>
 
@@ -663,10 +718,10 @@
     <div class='new-meta-box'>
       
         
-          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2023-01-12T15:10:06+08:00">
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2023-02-16T14:05:14+08:00">
   <a class='notlink'>
     <i class="fas fa-save" aria-hidden="true"></i>
-    <p>更新于：2023年1月12日</p>
+    <p>更新于：2023年2月16日</p>
   </a>
 </div>
 
@@ -817,7 +872,7 @@
 
 
     <div class='content'>
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装docker"><span class="toc-text">安装docker</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装mysql集群（一主二从）"><span class="toc-text">安装mysql集群（一主二从）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装minio集群"><span class="toc-text">安装minio集群</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#单机版"><span class="toc-text">单机版</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#集群版"><span class="toc-text">集群版</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装elasticsearch集群"><span class="toc-text">安装elasticsearch集群</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装kibana-单机"><span class="toc-text">安装kibana(单机)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装only-office-单机"><span class="toc-text">安装only-office(单机)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#未完待补充"><span class="toc-text">未完待补充</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#docker命令"><span class="toc-text">docker命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#磁盘挂载"><span class="toc-text">磁盘挂载</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#新建分区"><span class="toc-text">新建分区</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#格式化硬盘"><span class="toc-text">格式化硬盘</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#查询硬盘的UUID"><span class="toc-text">查询硬盘的UUID</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#UUID写入配置"><span class="toc-text">UUID写入配置</span></a></li></ol></li></ol></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装docker"><span class="toc-text">安装docker</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装mysql集群（一主二从）"><span class="toc-text">安装mysql集群（一主二从）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装minio集群"><span class="toc-text">安装minio集群</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#单机版"><span class="toc-text">单机版</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#集群版"><span class="toc-text">集群版</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装elasticsearch集群"><span class="toc-text">安装elasticsearch集群</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装kibana-单机"><span class="toc-text">安装kibana(单机)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装only-office-单机"><span class="toc-text">安装only-office(单机)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装redis主从"><span class="toc-text">安装redis主从</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#未完待补充"><span class="toc-text">未完待补充</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-text">附录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#docker命令"><span class="toc-text">docker命令</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#磁盘挂载"><span class="toc-text">磁盘挂载</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#新建分区"><span class="toc-text">新建分区</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#格式化硬盘"><span class="toc-text">格式化硬盘</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#查询硬盘的UUID"><span class="toc-text">查询硬盘的UUID</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#UUID写入配置"><span class="toc-text">UUID写入配置</span></a></li></ol></li></ol></li></ol>
     </div>
   </section>
 
