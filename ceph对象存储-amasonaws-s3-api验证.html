@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html>
+<head hexo-theme='https://volantis.js.org/#blog'>
+  <meta charset="utf-8">
+  <!-- SEO相关 -->
+  
+    
+  
+  <!-- 渲染优化 -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- 页面元数据 -->
+  
+    <title>ceph对象存储-amasonaws s3 api验证 - 微笑流浪</title>
+  
+    <meta name="keywords" content="ceph,java,oss">
+  
+  
+    <meta name="description" content="前提  Ceph的软件库为客户端应用程序对基于RADOS对象的存储系统提供了直接访问，并为Ceph的某些高级功能（包括RADOS块设备（RBD），RADOS网关（RGW）和Ceph文件系统（ CephFS）提供技术支持。其中Ceph对象网关(RGW)是在librados之上构建的对象存储接口，旨在为应用程序提供通...">
+  
+
+  <!-- feed -->
+  
+
+  <!-- import meta -->
+  
+
+  <!-- link -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css">
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10/dist/APlayer.min.css">
+  
+
+  <!-- import link -->
+  
+
+  <link rel="shortcut icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/favicon.ico">
+
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/style.css">
+
+  
+
+  <script>
+    function setLoadingBarProgress(num) {
+      document.getElementById('loading-bar').style.width=num+"%";
+    }
+  </script>
+
+  
+  
+  
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562" crossorigin="anonymous"></script>
+  
+</head>
+
+<body>
+  
+  <div id="loading-bar-wrapper">
+  <div id="loading-bar"></div>
+</div>
+<header class="l_header shadow floatable">
+
+  <div class='wrapper'>
+    <div class='nav-sub container--flex'>
+      <a class="logo flat-box"></a>
+      <ul class='switcher h-list'>
+        <li><a class="s-comment flat-btn fas fa-comments fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+          <li><a class="s-toc flat-btn fas fa-list fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+      </ul>
+    </div>
+		<div class="nav-main container container--flex">
+      
+        
+        <a class="logo flat-box" target="_self" href='/'>
+          
+          
+          
+          
+            SILLY-BILLY'S <b><sup style='color:#3AA757'>blog</sup></b>
+          
+        </a>
+      
+
+			<div class='menu navigation'>
+				<ul class='h-list'>
+          
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/
+                  
+                  
+                  
+                    id="home"
+                  >
+                  
+                    <i class='fas fa-home fa-fw fa-fw'></i>
+                  
+                  主页
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/categories/
+                  
+                  
+                  
+                    id="categories"
+                  >
+                  
+                    <i class='fas fa-folder-open fa-fw'></i>
+                  
+                  分类
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/tags/
+                  
+                  
+                  
+                    id="tags"
+                  >
+                  
+                    <i class='fas fa-tags fa-fw'></i>
+                  
+                  标签
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/archives/
+                  
+                  
+                  
+                    id="archives"
+                  >
+                  
+                    <i class='fas fa-archive fa-fw'></i>
+                  
+                  归档
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/404.html
+                  
+                  
+                  
+                    id="404html"
+                  >
+                  
+                    <i class='fas fa-link fa-fw'></i>
+                  
+                  友链
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/about/
+                  
+                  
+                  
+                    id="about"
+                  >
+                  
+                    <i class='fas fa-info-circle fa-fw'></i>
+                  
+                  关于
+                </a>
+                
+              </li>
+            
+          
+          
+				</ul>
+			</div>
+
+      
+        <div class="m_search">
+          <form name="searchform" class="form u-search-form">
+            <i class="icon fas fa-search fa-fw"></i>
+            <input type="text" class="input u-search-input" placeholder="搜索" />
+          </form>
+        </div>
+      
+
+			<ul class='switcher h-list'>
+				
+					<li><a class="s-search flat-btn fas fa-search fa-fw" target="_self" href='javascript:void(0)'></a></li>
+				
+				<li><a class="s-menu flat-btn fas fa-bars fa-fw" target="_self" href='javascript:void(0)'></a></li>
+			</ul>
+		</div>
+	</div>
+</header>
+<ul class="menu-phone navigation white-box">
+  
+  
+    <li>
+      <a class="flat-box" href=/
+        
+        
+        
+          id="home"
+        >
+        
+          <i class='fas fa-rss fa-fw'></i>
+        
+        博客
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/categories/
+        
+        
+        
+          id="categories"
+        >
+        
+          <i class='fas fa-folder-open fa-fw'></i>
+        
+        分类
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/tags/
+        
+        
+        
+          id="tags"
+        >
+        
+          <i class='fas fa-tags fa-fw'></i>
+        
+        标签
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/archives/
+        
+        
+        
+          id="archives"
+        >
+        
+          <i class='fas fa-archive fa-fw'></i>
+        
+        归档
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/404.html
+        
+        
+        
+          id="404html"
+        >
+        
+          <i class='fas fa-link fa-fw'></i>
+        
+        友链
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/about/
+        
+        
+        
+          id="about"
+        >
+        
+          <i class='fas fa-info-circle fa-fw'></i>
+        
+        关于
+      </a>
+    </li>
+  
+</ul>
+<script>setLoadingBarProgress(40);</script>
+
+
+
+  <div class="l_body nocover">
+    <div class='body-wrapper'>
+      
+
+<div class='l_main'>
+  
+
+  
+    <article id="post" class="post white-box shadow floatable article-type-post" itemscope itemprop="blogPost">
+      
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  
+    <h1 class="title">
+      <a href="/ceph%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8-amasonaws-s3-api%E9%AA%8C%E8%AF%81.html">
+        ceph对象存储-amasonaws s3 api验证
+      </a>
+    </h1>
+  
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/amazonaws-s3/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>ceph&nbsp;/&nbsp;java&nbsp;/&nbsp;oss&nbsp;/&nbsp;amazonaws s3</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2020年3月23日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+      <section class="article typo">
+        <div class="article-entry" itemprop="articleBody">
+          
+          <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>  Ceph的软件库为客户端应用程序对基于RADOS对象的存储系统提供了直接访问，并为Ceph的某些高级功能（包括RADOS块设备（RBD），RADOS网关（RGW）和Ceph文件系统（ CephFS）提供技术支持。其中Ceph对象网关(RGW)是在librados之上构建的对象存储接口，旨在为应用程序提供通往Ceph存储集群的RESTful网关。Ceph对象存储支持两个接口,它同时兼容amazonaws s3和OpenStack swift。本文主要通过s3调用ceph的对象存储功能，验证数据上传下载的稳定性。<br>  在ceph官方上查阅s3的api(java)，其实文档已经很老旧了，用来验证程序可能会出现很多问题，地址:<a href="https://docs.ceph.com/docs/master/radosgw/s3/java/" target="_blank" rel="noopener">ceph官网</a><br>  推荐直接去amazonaws官网找资料，地址:<a href="https://docs.amazonaws.cn/AWSJavaSDK/latest/javadoc/index.html" target="_blank" rel="noopener">amazonaws s3 api</a></p>
+<a id="more"></a>
+<h2 id="AmazonS3-maven相关依赖"><a href="#AmazonS3-maven相关依赖" class="headerlink" title="AmazonS3 maven相关依赖"></a>AmazonS3 maven相关依赖</h2><p>首先创建一个maven工程，添加AmazonAws S3相关jar包</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- AmazonS3对象存储 --&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">   &lt;groupId&gt;com.amazonaws&lt;/groupId&gt;</span><br><span class="line">   &lt;artifactId&gt;aws-java-sdk-s3&lt;/artifactId&gt;</span><br><span class="line">   &lt;version&gt;1.11.592&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">   &lt;groupId&gt;com.amazonaws&lt;/groupId&gt;</span><br><span class="line">   &lt;artifactId&gt;aws-java-sdk-core&lt;/artifactId&gt;</span><br><span class="line">   &lt;version&gt;1.11.592&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">   &lt;groupId&gt;com.google.guava&lt;/groupId&gt;</span><br><span class="line">   &lt;artifactId&gt;guava&lt;/artifactId&gt;</span><br><span class="line">   &lt;version&gt;27.0.1-jre&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="s3-api基本方法"><a href="#s3-api基本方法" class="headerlink" title="s3 api基本方法"></a>s3 api基本方法</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AmazonawsS3utils</span> </span>&#123;</span><br><span class="line">	<span class="comment">//s3用户身份验证accessKey、secretKey 配置信息在yml文件中</span></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;accessKey:null&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String accessKey;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;secretKey:null&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String secretKey;</span><br><span class="line">    <span class="comment">//服务器地址</span></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;endPoint:null&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String endPoint;</span><br><span class="line">    <span class="comment">//自定义一个bucket值</span></span><br><span class="line">    <span class="meta">@Value</span>(<span class="string">"$&#123;bucketName:null&#125;"</span>)</span><br><span class="line">    <span class="keyword">private</span> String bucketName;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> AmazonS3 amazonS3 = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> AmazonS3 <span class="title">getConnection</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (amazonS3 == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (amazonS3 == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    AWSCredentials credentials = <span class="keyword">new</span> BasicAWSCredentials(accessKey, secretKey);</span><br><span class="line">                    ClientConfiguration clientConfig = <span class="keyword">new</span> ClientConfiguration();</span><br><span class="line">                    clientConfig.setProtocol(Protocol.HTTP);</span><br><span class="line">                    <span class="comment">////设置用于签署此客户端请求的签名算法的名称。如果未设置或显式设置为null，客户端将根据服务和区域的支持的签名算法的配置文件选择使用的签名算法。</span></span><br><span class="line">                    clientConfig.setSignerOverride(<span class="string">"S3SignerType"</span>);</span><br><span class="line">                    amazonS3 = AmazonS3ClientBuilder.standard()</span><br><span class="line">                            .withEndpointConfiguration(<span class="keyword">new</span> AwsClientBuilder.EndpointConfiguration(endPoint, Regions.US_EAST_1.name()))</span><br><span class="line">                            .withPathStyleAccessEnabled(<span class="keyword">true</span>)</span><br><span class="line">                            .withClientConfiguration(clientConfig)</span><br><span class="line">                            .withCredentials(<span class="keyword">new</span> AWSStaticCredentialsProvider(credentials))</span><br><span class="line">                            .build();</span><br><span class="line">                    <span class="keyword">if</span> (!amazonS3.doesBucketExistV2(bucketName)) &#123;</span><br><span class="line">                        amazonS3.createBucket(bucketName);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> amazonS3;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">upload</span><span class="params">(String amazonS3Key, InputStream inputStream, ObjectMetadata objectMetadata)</span> </span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">        PutObjectRequest request = <span class="keyword">new</span> PutObjectRequest(bucketName, amazonS3Key, inputStream, objectMetadata);</span><br><span class="line">        <span class="comment">//设置大小接近100MB.</span></span><br><span class="line">        request.getRequestClientOptions().setReadLimit(<span class="number">1024</span> * <span class="number">1204</span> * <span class="number">100</span>);</span><br><span class="line">        amazonS3.putObject(request);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> InputStream <span class="title">download</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">        GetObjectRequest request = <span class="keyword">new</span> GetObjectRequest(bucketName, key);</span><br><span class="line">        S3Object object = amazonS3.getObject(request);</span><br><span class="line">        <span class="keyword">return</span> object.getObjectContent();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">download</span><span class="params">(String key, File file)</span> </span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">        amazonS3.getObject(<span class="keyword">new</span> GetObjectRequest(bucketName, key), file);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">downloadLength</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">        <span class="keyword">return</span> amazonS3.getObjectMetadata(bucketName, key).getContentLength();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">delete</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">        amazonS3.deleteObject(bucketName, key);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ObjectMetadata <span class="title">getObjectMetadata</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">        ObjectMetadata objectMetadata = amazonS3.getObjectMetadata(bucketName, key);</span><br><span class="line">        <span class="keyword">return</span> objectMetadata;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> URL <span class="title">getGeneratePresignedUrl</span><span class="params">(String key)</span></span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">        GeneratePresignedUrlRequest request = <span class="keyword">new</span> GeneratePresignedUrlRequest(bucketName,key);</span><br><span class="line">        <span class="comment">//一个预签名URL，可用于访问Amazon S3资源，而无需URL用户知道账户的AWS安全凭证</span></span><br><span class="line">        <span class="keyword">return</span> amazonS3.generatePresignedUrl(request);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isExist</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">        <span class="keyword">boolean</span> b = amazonS3.doesObjectExist(bucketName, key);</span><br><span class="line">        <span class="keyword">return</span> b;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isExistByKey</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (StringUtils.isNotBlank(key)) &#123;</span><br><span class="line">            AmazonS3 amazonS3 = <span class="keyword">this</span>.getConnection();</span><br><span class="line">            <span class="keyword">boolean</span> b = amazonS3.doesObjectExist(bucketName, key);</span><br><span class="line">            <span class="keyword">return</span> b;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="验证上传的可用性和下载稳定性"><a href="#验证上传的可用性和下载稳定性" class="headerlink" title="验证上传的可用性和下载稳定性"></a>验证上传的可用性和下载稳定性</h2><p>首先创建类实现上传功能,并注入AmazonawsS3utils工具类<br>SpeedVerifyService.java</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpeedVerifyService</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> AmazonawsS3utils amazonawsS3utils;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 上传文件</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key s3桶键值</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> path 源地址路径</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> FileNotFoundException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">upload</span><span class="params">(String key, String path)</span> <span class="keyword">throws</span> FileNotFoundException </span>&#123;</span><br><span class="line">        File file = <span class="keyword">new</span> File(path);</span><br><span class="line">        FileInputStream stream = <span class="keyword">new</span> FileInputStream(file);</span><br><span class="line">        ObjectMetadata data = <span class="keyword">new</span> ObjectMetadata();</span><br><span class="line">        <span class="comment">//大文件上需要预设文件长度，否则会出现outOfMemoryError</span></span><br><span class="line">        data.setContentLength(file.length());</span><br><span class="line">        amazonawsS3utils.upload(key, stream, data);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过创建Junit测试类上传不同格式的文件，在确保程序正常运行，且数据未丢包的情况下，开始侧重验证下载功能</p>
+<h3 id="单线程验证"><a href="#单线程验证" class="headerlink" title="单线程验证"></a>单线程验证</h3><p>s3提供了不同的下载接口，我们这里直接用getObject(GetObjectRequest getObjectRequest, File destinationFile)指定下载路径下载ceph上的文件。验证程序要求计算下载过程中的最大速率、平均速率以及总耗时。所以需要开启一个子线程来实时计算已下载文件的大小。在原SpeedVerifyService.java添加以下代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: silly-billy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/3/20 14:23</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 上传 下载 删除 测速</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Version</span>: 1.0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpeedVerifyService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> AmazonawsS3utils amazonawsS3utils;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 上传文件</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key s3桶键值</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> path 源地址路径</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> FileNotFoundException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">upload</span><span class="params">(String key, String path)</span> <span class="keyword">throws</span> FileNotFoundException </span>&#123;</span><br><span class="line">        File file = <span class="keyword">new</span> File(path);</span><br><span class="line">        FileInputStream stream = <span class="keyword">new</span> FileInputStream(file);</span><br><span class="line">        ObjectMetadata data = <span class="keyword">new</span> ObjectMetadata();</span><br><span class="line">        <span class="comment">//大文件上需要预设文件长度，否则会出现outOfMemoryError</span></span><br><span class="line">        data.setContentLength(file.length());</span><br><span class="line">        amazonawsS3utils.upload(key, stream, data);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 删除指定桶-键文件</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">delete</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">        amazonawsS3utils.delete(key);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 下载文件</span></span><br><span class="line"><span class="comment">     * key-bucket对应键下对象</span></span><br><span class="line"><span class="comment">     * path本地下载地址</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> CompletableFuture&lt;Map&lt;String, Double&gt;&gt; showDownloadDetails(String key, String path) &#123;</span><br><span class="line">        File file = <span class="keyword">new</span> File(path);</span><br><span class="line">        <span class="comment">//开启一个子线程用于测速</span></span><br><span class="line">        CompletableFuture&lt;Map&lt;String, Double&gt;&gt; future = dowloadListening(key, file);</span><br><span class="line">        <span class="comment">//文件下载</span></span><br><span class="line">        amazonawsS3utils.download(key, file);</span><br><span class="line">        <span class="keyword">return</span> future;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 下载测速并返回异步结果</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> file</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> CompletableFuture&lt;Map&lt;String, Double&gt;&gt; dowloadListening(String key, File file) &#123;</span><br><span class="line">        ThreadFactory namedThreadFactory = <span class="keyword">new</span> ThreadFactoryBuilder()</span><br><span class="line">                .setNameFormat(<span class="string">"test-speed-%d"</span>).build();</span><br><span class="line">        ExecutorService singleThreadPool = <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">300</span>,</span><br><span class="line">                <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">                <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;(<span class="number">1024</span>), namedThreadFactory, <span class="keyword">new</span> ThreadPoolExecutor.AbortPolicy());</span><br><span class="line">        CompletableFuture&lt;Map&lt;String, Double&gt;&gt; resultFuture = CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">            Map&lt;String, Double&gt; resultMap = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                log.info(<span class="string">"测速线程启动,&#123;&#125;"</span>,Thread.currentThread().getName());</span><br><span class="line">                <span class="comment">//文件大小</span></span><br><span class="line">                <span class="keyword">long</span> length = amazonawsS3utils.downloadLength(key);</span><br><span class="line">                <span class="comment">//下载速度集合</span></span><br><span class="line">                List&lt;Double&gt; speeds = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">                <span class="comment">//上一次时间节点</span></span><br><span class="line">                <span class="keyword">long</span> lastTime = Clock.systemUTC().millis();</span><br><span class="line">                <span class="comment">//当前时间节点</span></span><br><span class="line">                <span class="keyword">long</span> currentTime;</span><br><span class="line">                <span class="comment">//上一次文件大小</span></span><br><span class="line">                <span class="keyword">long</span> lastFileSize = <span class="number">0L</span>;</span><br><span class="line">                <span class="comment">//已下载文件大小</span></span><br><span class="line">                <span class="keyword">long</span> currentFileSize;</span><br><span class="line">                <span class="comment">//开始下载时间</span></span><br><span class="line">                <span class="keyword">long</span> startTime = <span class="number">0L</span>;</span><br><span class="line">                <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (!file.exists()) &#123;</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (<span class="number">0L</span> == startTime)&#123;</span><br><span class="line">                        startTime = Clock.systemUTC().millis();</span><br><span class="line">                    &#125;</span><br><span class="line">                    currentFileSize = file.length();</span><br><span class="line">                    <span class="keyword">if</span> (currentFileSize &gt;= length) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (speeds.isEmpty()) &#123;</span><br><span class="line">                            log.info(<span class="string">"已下载文件"</span>);</span><br><span class="line">                            <span class="keyword">break</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                        currentTime = Clock.systemUTC().millis();</span><br><span class="line">                        <span class="comment">//单位 kb/s</span></span><br><span class="line">                        <span class="keyword">double</span> speed = (<span class="number">1000</span> * (currentFileSize - lastFileSize)) / (<span class="number">1024</span> * (currentTime - lastTime));</span><br><span class="line">                        speeds.add(speed);</span><br><span class="line">                        log.info(<span class="string">"实时速度：&#123;&#125;kb/s"</span>, speed);</span><br><span class="line">                        log.info(<span class="string">"当前进度：&#123;&#125;%"</span>, (currentFileSize / (<span class="keyword">double</span>) length) * <span class="number">100</span>);</span><br><span class="line">                        <span class="keyword">double</span> consumeTime = (currentTime - startTime) / <span class="number">1000</span>;</span><br><span class="line">                        <span class="keyword">double</span> maxSpeed = speeds.stream().distinct().max(Double::compareTo).get();</span><br><span class="line">                        <span class="keyword">double</span> avgSpeed = speeds.stream().mapToDouble(x -&gt; x).average().getAsDouble();</span><br><span class="line">                        log.info(<span class="string">"下载完成,总耗时：&#123;&#125;s"</span>, consumeTime);</span><br><span class="line">                        log.info(<span class="string">"最大时速：&#123;&#125;kb/s"</span>, maxSpeed);</span><br><span class="line">                        log.info(<span class="string">"平均时速：&#123;&#125;kb/s"</span>, avgSpeed);</span><br><span class="line">                        resultMap.put(<span class="string">"耗时"</span>, consumeTime);</span><br><span class="line">                        resultMap.put(<span class="string">"最大下载速度"</span>, maxSpeed);</span><br><span class="line">                        resultMap.put(<span class="string">"平均下载速度"</span>, (<span class="keyword">double</span>) Math.round(avgSpeed * <span class="number">100</span>) / <span class="number">100</span>);</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    currentTime = Clock.systemUTC().millis();</span><br><span class="line">                    <span class="keyword">long</span> size = currentFileSize - lastFileSize;</span><br><span class="line">                    <span class="keyword">if</span> (size == <span class="number">0</span>) &#123;</span><br><span class="line">                        <span class="comment">//未下载</span></span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">double</span> speed = (<span class="number">1000</span> * size) / (<span class="number">1024</span> * (currentTime - lastTime));</span><br><span class="line">                    lastTime = currentTime;</span><br><span class="line">                    lastFileSize = currentFileSize;</span><br><span class="line">                    speeds.add(speed);</span><br><span class="line">                    log.info(<span class="string">"实时速度：&#123;&#125;kb/s"</span>, speed);</span><br><span class="line">                    log.info(<span class="string">"当前进度：&#123;&#125;%"</span>, (currentFileSize / (<span class="keyword">double</span>) length) * <span class="number">100</span>);</span><br><span class="line">                    Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> resultMap;</span><br><span class="line">        &#125;, singleThreadPool);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!singleThreadPool.isShutdown()) &#123;</span><br><span class="line">            singleThreadPool.shutdown();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> resultFuture;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后可以通过测试类或者用添加web依赖，用postman进行测试，我们这里新建一个Controller，调用showDownloadDetails(key,file)方法,然后抛出异步返回结果<br>SpeedVerifyController.java:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpeedVerifyController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    SpeedVerifyService speedVerifyService;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key  通键值</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> path 下载保存路径</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@ResponseBody</span></span><br><span class="line">    <span class="meta">@GetMapping</span>(<span class="string">"/showSpeedDetails"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Map&lt;String, Double&gt; <span class="title">showSpeedDetails</span><span class="params">(@RequestParam(<span class="string">"key"</span>)</span> String key, @<span class="title">RequestParam</span><span class="params">(<span class="string">"path"</span>)</span> String path) </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Map&lt;String, Double&gt; resultMap = speedVerifyService.showDownloadDetails(key, path).get();</span><br><span class="line">            <span class="keyword">return</span> resultMap;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            log.error(e.getMessage());</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">            log.error(e.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>控制台打印结果:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">2020-03-23 23:06:02.493 INFO  com.set.cephverify.service.SpeedVerifyService - 下载线程启动,Thread[http-nio-8080-exec-1,5,main]</span><br><span class="line">2020-03-23 23:06:02.498 INFO  com.set.cephverify.service.SpeedVerifyService - 测速线程启动,test-speed-0</span><br><span class="line">2020-03-23 23:06:03.057 INFO  com.set.cephverify.service.SpeedVerifyService - 实时速度：350.0kb&#x2F;s</span><br><span class="line">2020-03-23 23:06:03.057 INFO  com.set.cephverify.service.SpeedVerifyService - 当前进度：0.11664949383248767%</span><br><span class="line">2020-03-23 23:06:04.098 INFO  com.set.cephverify.service.SpeedVerifyService - 实时速度：1066.0kb&#x2F;s</span><br><span class="line">2020-03-23 23:06:04.099 INFO  com.set.cephverify.service.SpeedVerifyService - 当前进度：11.643242433961678%</span><br><span class="line">...</span><br><span class="line">2020-03-23 23:07:04.877 INFO  com.set.cephverify.service.SpeedVerifyService - 实时速度：1965.0kb&#x2F;s</span><br><span class="line">2020-03-23 23:07:04.877 INFO  com.set.cephverify.service.SpeedVerifyService - 当前进度：97.21021070550222%</span><br><span class="line">2020-03-23 23:07:05.877 INFO  com.set.cephverify.service.SpeedVerifyService - 实时速度：268.0kb&#x2F;s</span><br><span class="line">2020-03-23 23:07:05.877 INFO  com.set.cephverify.service.SpeedVerifyService - 当前进度：100.0%</span><br><span class="line">2020-03-23 23:07:05.884 INFO  com.set.cephverify.service.SpeedVerifyService - 下载完成,总耗时：62.0s</span><br><span class="line">2020-03-23 23:07:05.884 INFO  com.set.cephverify.service.SpeedVerifyService - 最大时速：2036.0kb&#x2F;s</span><br><span class="line">2020-03-23 23:07:05.885 INFO  com.set.cephverify.service.SpeedVerifyService - 平均时速：659.2kb&#x2F;s</span><br></pre></td></tr></table></figure>
+<p>postman异步返回值：<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/ceph/1.png" alt="result"><br>由于我这里是用VPN挂的网络环境，所以速度慢了很多，网络正常的话测试是十几M/s。<br>尝试下载不同大小的文件(1M-2GB),不同的文件格式(mp3,mp4,txt,exe…),程序执行完成后，根据下载路径打开文件，确保文件未曾损坏或缺失。</p>
+<h3 id="多线程验证"><a href="#多线程验证" class="headerlink" title="多线程验证"></a>多线程验证</h3><p>接着我们需要开启多个线程在ceph服务器上下载同一个文件，以此模拟多用户同时下载某个文件时，确认ceph服务器是否能够提供有效的下载支持以及验证ceph的稳定性。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 模拟多用户同时下载文件，ceph性能验证</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key s3桶键值</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> threadNum 线程数</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> path 下载保存路径 n个线程对应n个path</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> List&lt;CompletableFuture&lt;Map&lt;String,Double&gt;&gt;&gt; showMultiDownloadDetails(String key,<span class="keyword">int</span> threadNum,<span class="keyword">final</span> String... path)&#123;</span><br><span class="line">        <span class="comment">//开启多线程</span></span><br><span class="line">        <span class="keyword">var</span> executor = <span class="keyword">new</span> ThreadPoolExecutor(threadNum, <span class="number">300</span>, <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">                <span class="keyword">new</span> LinkedBlockingDeque&lt;&gt;(<span class="number">1000</span>), <span class="keyword">new</span> ThreadPoolExecutor.CallerRunsPolicy());</span><br><span class="line">        List&lt;CompletableFuture&lt;Map&lt;String,Double&gt;&gt;&gt; futures = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; threadNum; i++) &#123;</span><br><span class="line">            <span class="keyword">int</span> index = i;</span><br><span class="line">            <span class="comment">//保存异步处理结果</span></span><br><span class="line">            CompletableFuture.supplyAsync(()-&gt;showDownloadDetails(key,path[index]),executor)</span><br><span class="line">                    .thenAccept(result-&gt;&#123;</span><br><span class="line">                        <span class="keyword">synchronized</span> (<span class="keyword">this</span>)&#123;</span><br><span class="line">                            <span class="comment">//同一时间多个线程进入arrayList.add方法会出现不安全问题--数据覆盖</span></span><br><span class="line">                            futures.add(result);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (futures.size() &lt; threadNum) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">//while(true)这种方式判断的执行级别过高，会阻塞其他子线程的执行</span></span><br><span class="line">                    <span class="comment">//所以每次判断后需要sleep一段时间</span></span><br><span class="line">                    Thread.sleep(<span class="number">100L</span>);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    log.info(e.getMessage());</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!executor.isShutdown())&#123;</span><br><span class="line">            executor.shutdown();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> futures;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>耗时任务调用单线程的下载逻辑即可，这里简单的通过异步结果数组个数和线程数做判断，用来确定所有异步future返回了结果(因为实现逻辑的线程数和任务处理个数是一致的)，抛弃这个特殊情况，一般多个异步任务判断是否全部执行完毕，是通过定义volatile字段的数值描述线程执行状态。<br>注：在多线程的任务调度中，可以通过jdk原生命令调用jps命令获取java运行的pid,然后通过jstack命令查看每个执行线程的堆栈信息，排查问题。</p>
+<p>新建一个测试类测试一下结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">showDownloadDetails</span><span class="params">()</span> <span class="keyword">throws</span> ExecutionException, InterruptedException, IOException </span>&#123;</span><br><span class="line">        </span><br><span class="line">    String key = ***;</span><br><span class="line">    <span class="keyword">int</span> threadNum = ***;</span><br><span class="line">    String[] paths = ***;</span><br><span class="line">    <span class="keyword">var</span> futures = speedVerifyService.showMultiDownloadDetails(key, threadNum, paths);</span><br><span class="line">        </span><br><span class="line">    System.err.println(</span><br><span class="line">        futures.stream().map(m-&gt;&#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> m.get();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">               	e.printStackTrace();</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;);</span><br><span class="line">	)；</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>控制台打印结果：<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/ceph/2.png" alt="result"><br>经过多次测试，ceph下载文件在单线程状态下没有任何问题。<br>在多线程状态下，ceph的下载速率随着线程数增多，下载速率会变慢。(发现所有线程总的下载速率和单线程情况下几乎一致，可能用的同一个连接的缘故)<br>如果文件格式过大，比如1G以上的文件，如果开启超过60个线程，会出现丢包的情况,甚至少数线程并没有执行s3的download方法，查看线程堆栈信息，发现此类线程一直处于wait状态。文件越大，可同时开启的线程数就越少，具体问题未知(有空去问问运维)。</p>
+
+          
+            <br>
+            
+  
+    
+    
+
+<section class="widget copyright  desktop mobile">
+  <div class='content'>
+    
+      <blockquote>
+        
+          
+            <p>博客内容遵循 署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</p>
+
+          
+        
+          
+            <p>本文永久链接是：<a href=https://sillybilly-share.top/ceph%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8-amasonaws-s3-api%E9%AA%8C%E8%AF%81.html>https://sillybilly-share.top/ceph%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8-amasonaws-s3-api%E9%AA%8C%E8%AF%81.html</a></p>
+          
+        
+      </blockquote>
+    
+  </div>
+</section>
+
+  
+
+  
+    
+    
+
+<section class="widget qrcode  desktop mobile">
+  
+
+  <div class='content article-entry'>
+    
+  </div>
+</section>
+
+  
+
+
+          
+        </div>
+        
+          
+
+
+  <section class='meta' id="footer-meta">
+    <div class='new-meta-box'>
+      
+        
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2022-11-24T09:35:09+08:00">
+  <a class='notlink'>
+    <i class="fas fa-save" aria-hidden="true"></i>
+    <p>更新于：2022年11月24日</p>
+  </a>
+</div>
+
+        
+      
+        
+          
+  
+  <div class="new-meta-item meta-tags"><a class="tag" href="/tags/ceph/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>ceph</p></a></div> <div class="new-meta-item meta-tags"><a class="tag" href="/tags/java/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>java</p></a></div> <div class="new-meta-item meta-tags"><a class="tag" href="/tags/oss/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>oss</p></a></div>
+
+
+        
+      
+        
+          
+
+        
+      
+        
+          
+  <div class="new-meta-item share -mob-share-list">
+  <div class="-mob-share-list share-body">
+    
+      
+        <a class="-mob-share-qq" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://connect.qq.com/widget/shareqq/index.html?url=https://sillybilly-share.top/ceph%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8-amasonaws-s3-api%E9%AA%8C%E8%AF%81.html&title=ceph对象存储-amasonaws s3 api验证 - 微笑流浪&summary=前提  Ceph的软件库为客户端应用程序对基于RADOS对象的存储系统提供了直接访问，并为Ceph的某些高级功能（包括RADOS块设备（RBD），RADOS网关（RGW）和Ceph文件系统（ CephFS）提供技术支持。其中Ceph对象网关(RGW)是在librados之上构建的对象存储接口，旨在为应用程序提供通往Ceph存储集群的RESTful网关。Ceph对象存储支持两个接口,它同时兼容amazonaws s3和OpenStack swift。本文主要通过s3调用ceph的对象存储功能，验证数据上传下载的稳定性。  在ceph官方上查阅s3的api(java)，其实文档已经很老旧了，用来验证程序可能会出现很多问题，地址:ceph官网  推荐直接去amazonaws官网找资料，地址:amazonaws s3 api"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qq.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-qzone" title="" rel="external nofollow noopener noreferrer"
+          
+          href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://sillybilly-share.top/ceph%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8-amasonaws-s3-api%E9%AA%8C%E8%AF%81.html&title=ceph对象存储-amasonaws s3 api验证 - 微笑流浪&summary=前提  Ceph的软件库为客户端应用程序对基于RADOS对象的存储系统提供了直接访问，并为Ceph的某些高级功能（包括RADOS块设备（RBD），RADOS网关（RGW）和Ceph文件系统（ CephFS）提供技术支持。其中Ceph对象网关(RGW)是在librados之上构建的对象存储接口，旨在为应用程序提供通往Ceph存储集群的RESTful网关。Ceph对象存储支持两个接口,它同时兼容amazonaws s3和OpenStack swift。本文主要通过s3调用ceph的对象存储功能，验证数据上传下载的稳定性。  在ceph官方上查阅s3的api(java)，其实文档已经很老旧了，用来验证程序可能会出现很多问题，地址:ceph官网  推荐直接去amazonaws官网找资料，地址:amazonaws s3 api"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qzone.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-weibo" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://service.weibo.com/share/share.php?url=https://sillybilly-share.top/ceph%E5%AF%B9%E8%B1%A1%E5%AD%98%E5%82%A8-amasonaws-s3-api%E9%AA%8C%E8%AF%81.html&title=ceph对象存储-amasonaws s3 api验证 - 微笑流浪&summary=前提  Ceph的软件库为客户端应用程序对基于RADOS对象的存储系统提供了直接访问，并为Ceph的某些高级功能（包括RADOS块设备（RBD），RADOS网关（RGW）和Ceph文件系统（ CephFS）提供技术支持。其中Ceph对象网关(RGW)是在librados之上构建的对象存储接口，旨在为应用程序提供通往Ceph存储集群的RESTful网关。Ceph对象存储支持两个接口,它同时兼容amazonaws s3和OpenStack swift。本文主要通过s3调用ceph的对象存储功能，验证数据上传下载的稳定性。  在ceph官方上查阅s3的api(java)，其实文档已经很老旧了，用来验证程序可能会出现很多问题，地址:ceph官网  推荐直接去amazonaws官网找资料，地址:amazonaws s3 api"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/weibo.png">
+          
+        </a>
+      
+    
+  </div>
+</div>
+
+
+
+        
+      
+    </div>
+  </section>
+
+
+        
+        
+          <div class="prev-next">
+            
+              <a class='prev' href='/java8%E4%B9%8BCompletableFuture%E5%88%9D%E8%AF%86.html'>
+                <p class='title'><i class="fas fa-chevron-left" aria-hidden="true"></i>java8之CompletableFuture初识</p>
+                <p class='content'>提要在jdk5中增加了很多新的并发处理机制，对于多线程处理有了很大的优化。我们通常会选择通过Future接口构建异步的应用，因为在之前的多线程的实现中，不管是继承thread类还是实现runna...</p>
+              </a>
+            
+            
+          </div>
+        
+      </section>
+    </article>
+  
+
+  
+    <!-- 显示推荐文章和评论 -->
+
+
+
+  <article class="post white-box comments shadow floatable">
+    <section class="article typo">
+      <p ct><i class='fas fa-comments'></i> 评论</p>
+      
+      
+      
+        <section id="comments">
+          <div id="lv-container" data-id="city" data-uid="MTAyMC80OTQ2OS8yNTk2MQ==">
+            <noscript><div><i class='fas fa-exclamation-triangle'>&nbsp;无法加载Livere评论系统，请确保您的网络能够正常访问。</div></noscript>
+          </div>
+        </section>
+      
+      
+      
+    </section>
+  </article>
+
+
+  
+
+
+
+
+<!-- 根据页面mathjax变量决定是否加载MathJax数学公式js -->
+
+
+
+  <script>
+    window.subData = {
+      title: 'ceph对象存储-amasonaws s3 api验证',
+      tools: true
+    }
+  </script>
+
+
+
+</div>
+<aside class='l_side'>
+  
+  
+
+  
+    
+    
+
+
+  <section class="widget toc-wrapper shadow floatable desktop mobile">
+    
+  <header>
+    
+      <i class="fas fa-list fa-fw" aria-hidden="true"></i><span class='name'>本文目录</span>
+    
+  </header>
+
+
+    <div class='content'>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#AmazonS3-maven相关依赖"><span class="toc-text">AmazonS3 maven相关依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#s3-api基本方法"><span class="toc-text">s3 api基本方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#验证上传的可用性和下载稳定性"><span class="toc-text">验证上传的可用性和下载稳定性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#单线程验证"><span class="toc-text">单线程验证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#多线程验证"><span class="toc-text">多线程验证</span></a></li></ol></li></ol>
+    </div>
+  </section>
+
+
+  
+
+
+</aside>
+
+
+  
+  <footer class="clearfix white">
+    <br><br>
+    
+      
+        <div class="aplayer-container">
+          
+
+  
+    <meting-js
+      theme='#1BCDFC'
+      autoplay='false'
+      volume='0.7'
+      loop='all'
+      order='list'
+      fixed='false'
+      list-max-height='340px'
+      server='netease'
+      type='playlist'
+      id='4926244994'
+      list-folded='true'>
+    </meting-js>
+  
+
+
+        </div>
+      
+    
+      
+        <br>
+        <div class="social-wrapper">
+          
+            
+              <a href="/atom.xml"
+                class="social fas fa-rss flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="mailto:1579700874@qq.com"
+                class="social fas fa-envelope flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="https://github.com/silly-billy"
+                class="social fab fa-github flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+        </div>
+      
+    
+      
+        
+          <div><p>博客内容遵循 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener">署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</a></p>
+</div>
+        
+      
+    
+      
+        
+          <div><p>本站使用 <a href="https://volantis.js.org/" target="_blank" rel="noopener">Volantis</a> 作为主题 ， 总访问量为 <span id="busuanzi_value_site_uv"></span> 次</p>
+</div>
+        
+      
+    
+      
+        <div class='copyright'>
+        <p>[Copyright © 2019-2020 silly-billy]</p>
+
+        </div>
+      
+    
+  </footer>
+
+<script>setLoadingBarProgress(80);</script>
+
+
+      <script>setLoadingBarProgress(60);</script>
+    </div>
+    <a class="s-top fas fa-arrow-up fa-fw" href='javascript:void(0)'></a>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.min.js"></script>
+
+
+  <script>
+    
+    var SEARCH_SERVICE = "hexo" || "hexo";
+    var ROOT = "/" || "/";
+    if (!ROOT.endsWith('/')) ROOT += '/';
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/instant_page.js" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.js"></script>
+
+  <script type="text/javascript">
+    $(function() {
+      Waves.attach('.flat-btn', ['waves-button']);
+      Waves.attach('.float-btn', ['waves-button', 'waves-float']);
+      Waves.attach('.float-btn-light', ['waves-button', 'waves-float', 'waves-light']);
+      Waves.attach('.flat-box', ['waves-block']);
+      Waves.attach('.float-box', ['waves-block', 'waves-float']);
+      Waves.attach('.waves-image');
+      Waves.init();
+    });
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/busuanzi.pure.mini.js"></script>
+
+
+
+  
+  
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.backstretch.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var imgs=["https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud.jpg", "https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud-1.jpg"];
+        if ('true' == 'true') {
+          function shuffle(arr){
+            /*From countercurrent-time*/
+            var n = arr.length;
+            while(n--) {
+              var index = Math.floor(Math.random() * n);
+              var temp = arr[index];
+              arr[index] = arr[n];
+              arr[n] = temp;
+            }
+          }
+          shuffle(imgs);
+        }
+        if ('.cover') {
+          $('.cover').backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        } else {
+          $.backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        }
+      });
+    </script>
+  
+
+
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/APlayer.min.js" async></script>
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/Meting.min.js" async></script>
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+      if (typeof LivereTower === 'function') { return; }
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+      e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  </script>
+
+
+
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/app.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/search.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/comment_typing.js"></script>
+
+
+
+<!-- 复制 -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/clipboard.min.js"></script>
+<script>
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="fas fa-copy"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copyed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-clipboard-check');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPYED';
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-exclamation-triangle');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+<!-- fancybox -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.js"></script>
+<script>
+  let LAZY_LOAD_IMAGE = "";
+  $(".article-entry").find("fancybox").find("img").each(function () {
+      var element = document.createElement("a");
+      $(element).attr("data-fancybox", "gallery");
+      $(element).attr("href", $(this).attr("src"));
+      /* 图片采用懒加载处理时,
+       * 一般图片标签内会有个属性名来存放图片的真实地址，比如 data-original,
+       * 那么此处将原本的属性名src替换为对应属性名data-original,
+       * 修改如下
+       */
+       if (LAZY_LOAD_IMAGE) {
+         $(element).attr("href", $(this).attr("data-original"));
+       }
+      $(this).wrap(element);
+  });
+</script>
+
+
+
+
+
+
+<script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562' crossorigin='anonymous'></script>
+<ins class='adsbygoogle' style='display:block' data-ad-client='ca-pub-7706779639350562' data-ad-slot='8192807482' data-ad-format='auto' data-full-width-responsive='true'></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+
+  <script>setLoadingBarProgress(100);</script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

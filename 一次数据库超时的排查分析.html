@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html>
+<head hexo-theme='https://volantis.js.org/#blog'>
+  <meta charset="utf-8">
+  <!-- SEO相关 -->
+  
+    
+  
+  <!-- 渲染优化 -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- 页面元数据 -->
+  
+    <title>一次数据库超时的排查分析 - 微笑流浪</title>
+  
+    <meta name="keywords" content="mysql,druid">
+  
+  
+    <meta name="description" content="前提很长一段时间，我们部署的服务经常性的出现以下异常
+123456ERROR druid.sql.Statement - [statementLogError,148] - &#123;conn-10135, stmt-24201&#125; execute error. SELECT 1 FROM DUALco...">
+  
+
+  <!-- feed -->
+  
+
+  <!-- import meta -->
+  
+
+  <!-- link -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css">
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10/dist/APlayer.min.css">
+  
+
+  <!-- import link -->
+  
+
+  <link rel="shortcut icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/favicon.ico">
+
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/style.css">
+
+  
+
+  <script>
+    function setLoadingBarProgress(num) {
+      document.getElementById('loading-bar').style.width=num+"%";
+    }
+  </script>
+
+  
+  
+  
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562" crossorigin="anonymous"></script>
+  
+</head>
+
+<body>
+  
+  <div id="loading-bar-wrapper">
+  <div id="loading-bar"></div>
+</div>
+<header class="l_header shadow floatable">
+
+  <div class='wrapper'>
+    <div class='nav-sub container--flex'>
+      <a class="logo flat-box"></a>
+      <ul class='switcher h-list'>
+        <li><a class="s-comment flat-btn fas fa-comments fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+          <li><a class="s-toc flat-btn fas fa-list fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+      </ul>
+    </div>
+		<div class="nav-main container container--flex">
+      
+        
+        <a class="logo flat-box" target="_self" href='/'>
+          
+          
+          
+          
+            SILLY-BILLY'S <b><sup style='color:#3AA757'>blog</sup></b>
+          
+        </a>
+      
+
+			<div class='menu navigation'>
+				<ul class='h-list'>
+          
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/
+                  
+                  
+                  
+                    id="home"
+                  >
+                  
+                    <i class='fas fa-home fa-fw fa-fw'></i>
+                  
+                  主页
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/categories/
+                  
+                  
+                  
+                    id="categories"
+                  >
+                  
+                    <i class='fas fa-folder-open fa-fw'></i>
+                  
+                  分类
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/tags/
+                  
+                  
+                  
+                    id="tags"
+                  >
+                  
+                    <i class='fas fa-tags fa-fw'></i>
+                  
+                  标签
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/archives/
+                  
+                  
+                  
+                    id="archives"
+                  >
+                  
+                    <i class='fas fa-archive fa-fw'></i>
+                  
+                  归档
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/404.html
+                  
+                  
+                  
+                    id="404html"
+                  >
+                  
+                    <i class='fas fa-link fa-fw'></i>
+                  
+                  友链
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/about/
+                  
+                  
+                  
+                    id="about"
+                  >
+                  
+                    <i class='fas fa-info-circle fa-fw'></i>
+                  
+                  关于
+                </a>
+                
+              </li>
+            
+          
+          
+				</ul>
+			</div>
+
+      
+        <div class="m_search">
+          <form name="searchform" class="form u-search-form">
+            <i class="icon fas fa-search fa-fw"></i>
+            <input type="text" class="input u-search-input" placeholder="搜索" />
+          </form>
+        </div>
+      
+
+			<ul class='switcher h-list'>
+				
+					<li><a class="s-search flat-btn fas fa-search fa-fw" target="_self" href='javascript:void(0)'></a></li>
+				
+				<li><a class="s-menu flat-btn fas fa-bars fa-fw" target="_self" href='javascript:void(0)'></a></li>
+			</ul>
+		</div>
+	</div>
+</header>
+<ul class="menu-phone navigation white-box">
+  
+  
+    <li>
+      <a class="flat-box" href=/
+        
+        
+        
+          id="home"
+        >
+        
+          <i class='fas fa-rss fa-fw'></i>
+        
+        博客
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/categories/
+        
+        
+        
+          id="categories"
+        >
+        
+          <i class='fas fa-folder-open fa-fw'></i>
+        
+        分类
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/tags/
+        
+        
+        
+          id="tags"
+        >
+        
+          <i class='fas fa-tags fa-fw'></i>
+        
+        标签
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/archives/
+        
+        
+        
+          id="archives"
+        >
+        
+          <i class='fas fa-archive fa-fw'></i>
+        
+        归档
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/404.html
+        
+        
+        
+          id="404html"
+        >
+        
+          <i class='fas fa-link fa-fw'></i>
+        
+        友链
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/about/
+        
+        
+        
+          id="about"
+        >
+        
+          <i class='fas fa-info-circle fa-fw'></i>
+        
+        关于
+      </a>
+    </li>
+  
+</ul>
+<script>setLoadingBarProgress(40);</script>
+
+
+
+  <div class="l_body nocover">
+    <div class='body-wrapper'>
+      
+
+<div class='l_main'>
+  
+
+  
+    <article id="post" class="post white-box shadow floatable article-type-post" itemscope itemprop="blogPost">
+      
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  
+    <h1 class="title">
+      <a href="/%E4%B8%80%E6%AC%A1%E6%95%B0%E6%8D%AE%E5%BA%93%E8%B6%85%E6%97%B6%E7%9A%84%E6%8E%92%E6%9F%A5%E5%88%86%E6%9E%90.html">
+        一次数据库超时的排查分析
+      </a>
+    </h1>
+  
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2023年7月24日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+      <section class="article typo">
+        <div class="article-entry" itemprop="articleBody">
+          
+          <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>很长一段时间，我们部署的服务经常性的出现以下异常</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ERROR druid.sql.Statement - [statementLogError,148] - &#123;conn-10135, stmt-24201&#125; execute error. SELECT 1 FROM DUAL</span><br><span class="line">com.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failure</span><br><span class="line"></span><br><span class="line">The last packet successfully received from the server was 3,741,977 milliseconds ago. The last packet sent successfully to the server was 3,741,978 milliseconds ago.</span><br><span class="line">&#x2F;&#x2F; 堆栈信息</span><br><span class="line">xxx</span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<p>了解<code>druid</code>连接池的应该都知道，这是<code>DruidDataSource</code>下的<code>validationQuery</code>配置，这段<code>sql</code>主要用来检测连接是否有效的，所以一段时间内，我们都没有当回事儿，毕竟不是业务报错，不影响正常使用就行。</p>
+<h2 id="一点点小问题"><a href="#一点点小问题" class="headerlink" title="一点点小问题"></a>一点点小问题</h2><p>随着项目的推进，我们发现不仅仅是<code>druid</code>内部检测的<code>sql</code>报错，我们的一些业务性<code>sql</code>同样会超时，并且这些爆出超时<code>sql</code>并不是<code>slow sql</code>，在<code>mysql</code>服务器上执行耗时都是毫秒级的。</p>
+<p>值得一提的是，在我们的开发、测试、演示环境均未出现这样的情况。通过控制变量法，我们一致认定这是政务网的网络问题。</p>
+<p>我们的数据库和业务服务在政务网是异网部署的方式，当时的结论是两个网段之间存在丢包的情况(虽然<code>ping</code>的通，<code>telnet</code>也没问题)，具体是网络的哪方面原因，因为项目刚刚开始，有很多服务都需要有产出，没有时间去深究（当然也不愿意去看<code>druid</code>的源码）。这些超时的异常由前端隐去，然后不了了之了。</p>
+<h2 id="问题升级"><a href="#问题升级" class="headerlink" title="问题升级"></a>问题升级</h2><p>项目中期阶段，组内有个服务上线。出现一个非常诡异的现象，项目启动后，第一次请求某个页面非常非常慢，后面再请求页面时，所有接口又都能及时响应。过了<code>20min</code>左右，再次访问某个页面又会卡顿，周而复始。通过<code>arthas</code>定位，发现响应耗时均卡在<code>db</code>上。</p>
+<h2 id="定位"><a href="#定位" class="headerlink" title="定位"></a>定位</h2><p>近期短信服务上线，经常性出现短信发送失败的情况。页面请求在转圈，一直等到<code>http</code>接口响应超时。为了不影响用户体验，趁此机会我决定摸排一下这个问题。</p>
+<p>首先想到的就是去服务器上拉取日志，看下有没有什么明显的异常信息。错误日志虽然没有找到，但是发现短信发送的日志都只输出了一部分，像是卡在了某个环节，于是乎我们用<code>jstack</code> <PID> 看一下当前<code>java</code>线程执行的堆栈情况，发现所有的数据库操作都卡在了<code>socketRead0</code>上。 </p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/20230724/%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_16899084739787.png" alt="result"></p>
+<p>了解过数据库交互原理的应该知道，<code>Druid</code>是通过我们提供数据库的用户名、密码等，然后使用<code>JDBC</code>驱动程序来建立连接。建立连接时，<code>JDBC</code>驱动程序会通过<code>TCP/IP</code>协议与数据库服务器进行通信，以建立一个网络连接。一旦连接建立成功，<code>JDBC API</code>就可以使用该连接来执行<code>SQL</code>查询和更新操作。</p>
+<p>看到这里，我想到以下几种可能导致的问题。</p>
+<p>1、网络问题？按起初的想法，最先考虑的就是网络问题，如网络延迟或丢包等，那么Socket请求可能会发生阻塞。客户端发送了一个请求，如果服务器没有及时响应，那么客户端就会一直等待，直到收到服务器响应或者超时。</p>
+<p>然而经过我的多次尝试，我发现网络并不存在丢包的情况，还算比较稳定。</p>
+<p>2、服务器负载？如果服务器的负载过高，那么服务器可能无法及时响应客户端的请求，导致客户端的请求发生阻塞？</p>
+<p>但是经过统计我们的<code>QPS</code>并不高</p>
+<p>3、IO操作阻塞？如果客户端或服务器在进行IO操作（如读写数据）时阻塞，那么Socket请求也可能会发生阻塞。</p>
+<p>但是实际来看，我们<code>Sql</code>执行的数据量并不占IO。</p>
+<p>4、防火墙和代理服务器？这里不是指防火墙端口没有放开，否则就不会存在出现发送成功的短信了。因为我们数据库和业务服务在不同的网段，会不会是交换机的防火墙的TCP超时时长设置有问题？</p>
+<p>再看问题之前，我们先了解一下<code>druid</code>的相关配置</p>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>缺省值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>name</td>
+<td></td>
+<td>配置这个属性的意义在于，如果存在多个数据源，监控的时候可以通过名字来区分开来。如果没有配置，将会生成一个名字，格式是：”DataSource-“ + System.identityHashCode(this). 另外配置此属性至少在1.0.5版本中是不起作用的，强行设置name会出错。<a href="http://blog.csdn.net/lanmo555/article/details/41248763" target="_blank" rel="noopener">详情-点此处</a>。</td>
+</tr>
+<tr>
+<td>url</td>
+<td></td>
+<td>连接数据库的url，不同数据库不一样。例如： mysql : jdbc:mysql://10.20.153.104:3306/druid2 oracle : jdbc:oracle:thin:@10.20.149.85:1521:ocnauto</td>
+</tr>
+<tr>
+<td>username</td>
+<td></td>
+<td>连接数据库的用户名</td>
+</tr>
+<tr>
+<td>password</td>
+<td></td>
+<td>连接数据库的密码。如果你不希望密码直接写在配置文件中，可以使用ConfigFilter。<a href="https://github.com/alibaba/druid/wiki/使用ConfigFilter" target="_blank" rel="noopener">详细看这里</a></td>
+</tr>
+<tr>
+<td>driverClassName</td>
+<td>根据url自动识别</td>
+<td>这一项可配可不配，如果不配置druid会根据url自动识别dbType，然后选择相应的driverClassName</td>
+</tr>
+<tr>
+<td>initialSize</td>
+<td>0</td>
+<td>初始化时建立物理连接的个数。初始化发生在显示调用init方法，或者第一次getConnection时</td>
+</tr>
+<tr>
+<td>maxActive</td>
+<td>8</td>
+<td>最大连接池数量</td>
+</tr>
+<tr>
+<td>maxIdle</td>
+<td>8</td>
+<td>已经不再使用，配置了也没效果</td>
+</tr>
+<tr>
+<td>minIdle</td>
+<td></td>
+<td>最小连接池数量</td>
+</tr>
+<tr>
+<td>maxWait</td>
+<td></td>
+<td>获取连接时最大等待时间，单位毫秒。配置了maxWait之后，缺省启用公平锁，并发效率会有所下降，如果需要可以通过配置useUnfairLock属性为true使用非公平锁。</td>
+</tr>
+<tr>
+<td>poolPreparedStatements</td>
+<td>false</td>
+<td>是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle。在mysql下建议关闭。</td>
+</tr>
+<tr>
+<td>maxPoolPreparedStatementPerConnectionSize</td>
+<td>-1</td>
+<td>要启用PSCache，必须配置大于0，当大于0时，poolPreparedStatements自动触发修改为true。在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100</td>
+</tr>
+<tr>
+<td>validationQuery</td>
+<td></td>
+<td>用来检测连接是否有效的sql，要求是一个查询语句，常用select ‘x’。如果validationQuery为null，testOnBorrow、testOnReturn、testWhileIdle都不会起作用。</td>
+</tr>
+<tr>
+<td>validationQueryTimeout</td>
+<td></td>
+<td>单位：秒，检测连接是否有效的超时时间。底层调用jdbc Statement对象的void setQueryTimeout(int seconds)方法</td>
+</tr>
+<tr>
+<td>testOnBorrow</td>
+<td>true</td>
+<td>申请连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。</td>
+</tr>
+<tr>
+<td>testOnReturn</td>
+<td>false</td>
+<td>归还连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。</td>
+</tr>
+<tr>
+<td>testWhileIdle</td>
+<td>false</td>
+<td>建议配置为true，不影响性能，并且保证安全性。申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效。</td>
+</tr>
+<tr>
+<td>keepAlive</td>
+<td>false （1.0.28）</td>
+<td>连接池中的minIdle数量以内的连接，空闲时间超过minEvictableIdleTimeMillis，则会执行keepAlive操作。</td>
+</tr>
+<tr>
+<td>timeBetweenEvictionRunsMillis</td>
+<td>1分钟（1.0.14）</td>
+<td>有两个含义： 1) Destroy线程会检测连接的间隔时间，如果连接空闲时间大于等于minEvictableIdleTimeMillis则关闭物理连接。 2) testWhileIdle的判断依据，详细看testWhileIdle属性的说明</td>
+</tr>
+<tr>
+<td>numTestsPerEvictionRun</td>
+<td>30分钟（1.0.14）</td>
+<td>不再使用，一个DruidDataSource只支持一个EvictionRun</td>
+</tr>
+<tr>
+<td>minEvictableIdleTimeMillis</td>
+<td></td>
+<td>连接保持空闲而不被驱逐的最小时间</td>
+</tr>
+<tr>
+<td>connectionInitSqls</td>
+<td></td>
+<td>物理连接初始化的时候执行的sql</td>
+</tr>
+<tr>
+<td>exceptionSorter</td>
+<td>根据dbType自动识别</td>
+<td>当数据库抛出一些不可恢复的异常时，抛弃连接</td>
+</tr>
+<tr>
+<td>filters</td>
+<td></td>
+<td>属性类型是字符串，通过别名的方式配置扩展插件，常用的插件有： 监控统计用的filter:stat 日志用的filter:log4j 防御sql注入的filter:wall</td>
+</tr>
+<tr>
+<td>proxyFilters</td>
+<td></td>
+<td>类型是List&lt;com.alibaba.druid.filter.Filter&gt;，如果同时配置了filters和proxyFilters，是组合关系，并非替换关系</td>
+</tr>
+</tbody></table>
+<p>带着最后一个问题，我联系现场的人帮忙看下交换机的防火墙策略是怎样的，会不会因为防火墙TCP超时时长过小，甚至小于druid配置的<code>minEvictableIdleTimeMillis</code>导致物理连接已经断开，但是<code>druid</code>并未被驱逐。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/20230724/043471854204216dab2757fa4a9a716.png" alt="result"></p>
+<p>由上图可知，<code>TCP</code>长连接的超时时长设置的是<code>20min</code>，但是我们<code>minEvictableIdleTimeMillis</code>设置的是<code>5min</code>，<code>timeBetweenEvictionRunsMillis</code>设置的是<code>1min</code>，就是说我们数据库连接池会定时每分钟检测连接，如果空闲超过<code>5min</code>就会关闭此连接，按理说不会有什么问题。</p>
+<p>但是想到既然有<code>minEvictableIdleTimeMillis</code>,那会不会有<code>maxEvictableIdleTimeMillis</code>，虽然<code>druid github</code>上并没有给出相关配置，但是还是需要深入源码，看一下<code>druid</code>连接销毁的策略（主要看物理连接销毁的逻辑）。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DestroyTask</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">DestroyTask</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            shrink(<span class="keyword">true</span>, keepAlive);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (isRemoveAbandoned()) &#123;</span><br><span class="line">                removeAbandoned();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">shrink</span><span class="params">(<span class="keyword">boolean</span> checkTime, <span class="keyword">boolean</span> keepAlive)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            lock.lockInterruptibly();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">boolean</span> needFill = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">int</span> evictCount = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> keepAliveCount = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> fatalErrorIncrement = fatalErrorCount - fatalErrorCountLastShrink;</span><br><span class="line">        fatalErrorCountLastShrink = fatalErrorCount;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (!inited) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">int</span> checkCount = poolingCount - minIdle;</span><br><span class="line">            <span class="keyword">final</span> <span class="keyword">long</span> currentTimeMillis = System.currentTimeMillis();</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; poolingCount; ++i) &#123;</span><br><span class="line">                DruidConnectionHolder connection = connections[i];</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> ((onFatalError || fatalErrorIncrement &gt; <span class="number">0</span>) &amp;&amp; (lastFatalErrorTimeMillis &gt; connection.connectTimeMillis)) &#123;</span><br><span class="line">                    keepAliveConnections[keepAliveCount++] = connection;</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (checkTime) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (phyTimeoutMillis &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                        <span class="keyword">long</span> phyConnectTimeMillis = currentTimeMillis - connection.connectTimeMillis;</span><br><span class="line">                        <span class="keyword">if</span> (phyConnectTimeMillis &gt; phyTimeoutMillis) &#123;</span><br><span class="line">                            evictConnections[evictCount++] = connection;</span><br><span class="line">                            <span class="keyword">continue</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">long</span> idleMillis = currentTimeMillis - connection.lastActiveTimeMillis;</span><br><span class="line">					</span><br><span class="line">                    <span class="keyword">if</span> (idleMillis &lt; minEvictableIdleTimeMillis</span><br><span class="line">                            &amp;&amp; idleMillis &lt; keepAliveBetweenTimeMillis</span><br><span class="line">                    ) &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (idleMillis &gt;= minEvictableIdleTimeMillis) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (checkTime &amp;&amp; i &lt; checkCount) &#123;</span><br><span class="line">                            <span class="comment">// 当前数据库连接数 &gt; 最小连接池数量 并且 连接空闲时长 &gt; 最小空闲时间</span></span><br><span class="line">                            evictConnections[evictCount++] = connection;</span><br><span class="line">                            <span class="keyword">continue</span>;</span><br><span class="line">                        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (idleMillis &gt; maxEvictableIdleTimeMillis) &#123;</span><br><span class="line">                            <span class="comment">// 当前数据库连接数 &lt;= 最小连接池数量 并且 连接空闲时长 &gt; 最大空闲时间</span></span><br><span class="line">                            evictConnections[evictCount++] = connection;</span><br><span class="line">                            <span class="keyword">continue</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (keepAlive &amp;&amp; idleMillis &gt;= keepAliveBetweenTimeMillis) &#123;</span><br><span class="line">                        keepAliveConnections[keepAliveCount++] = connection;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (i &lt; checkCount) &#123;</span><br><span class="line">                        evictConnections[evictCount++] = connection;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 省略</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>看到注释的那段代码，结合<code>druid</code>控制台的连接数监控。果然问题就出现在<code>maxEvictableIdleTimeMillis</code>上面。他在<code>druid</code>的默认大小是<code>7</code>个小时远远高于防火墙的配置。</p>
+<p>因为业务<code>QPS</code>并不高，连接数一般都不会高于我们配置的最小连接数，所以我们的连接一般要等到<code>7</code>个小时之后才会被<code>druid</code>关闭，但这期间已经被防火墙杀死了，所以大量业务报超时告警。</p>
+<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><p>知道问题的原因，我们有以下解决方案</p>
+<p>1、业务和数据库尽量部署在一起，避免因为网络问题导致的超时</p>
+<p>2、联系厂商，调整跨网交换机防火墙的TCP超时时长配置</p>
+<p>3、设置数据库连接池的<code>maxEvictableIdleTimeMillis</code>配置，保证<code>maxEvictableIdleTimeMillis</code>小于防火墙的超时时间</p>
+
+          
+            <br>
+            
+  
+    
+    
+
+<section class="widget copyright  desktop mobile">
+  <div class='content'>
+    
+      <blockquote>
+        
+          
+            <p>博客内容遵循 署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</p>
+
+          
+        
+          
+            <p>本文永久链接是：<a href=https://sillybilly-share.top/%E4%B8%80%E6%AC%A1%E6%95%B0%E6%8D%AE%E5%BA%93%E8%B6%85%E6%97%B6%E7%9A%84%E6%8E%92%E6%9F%A5%E5%88%86%E6%9E%90.html>https://sillybilly-share.top/%E4%B8%80%E6%AC%A1%E6%95%B0%E6%8D%AE%E5%BA%93%E8%B6%85%E6%97%B6%E7%9A%84%E6%8E%92%E6%9F%A5%E5%88%86%E6%9E%90.html</a></p>
+          
+        
+      </blockquote>
+    
+  </div>
+</section>
+
+  
+
+  
+    
+    
+
+<section class="widget qrcode  desktop mobile">
+  
+
+  <div class='content article-entry'>
+    
+  </div>
+</section>
+
+  
+
+
+          
+        </div>
+        
+          
+
+
+  <section class='meta' id="footer-meta">
+    <div class='new-meta-box'>
+      
+        
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2023-07-26T17:50:52+08:00">
+  <a class='notlink'>
+    <i class="fas fa-save" aria-hidden="true"></i>
+    <p>更新于：2023年7月26日</p>
+  </a>
+</div>
+
+        
+      
+        
+          
+  
+  <div class="new-meta-item meta-tags"><a class="tag" href="/tags/mysql/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>mysql</p></a></div> <div class="new-meta-item meta-tags"><a class="tag" href="/tags/druid/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>druid</p></a></div>
+
+
+        
+      
+        
+          
+
+        
+      
+        
+          
+  <div class="new-meta-item share -mob-share-list">
+  <div class="-mob-share-list share-body">
+    
+      
+        <a class="-mob-share-qq" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://connect.qq.com/widget/shareqq/index.html?url=https://sillybilly-share.top/%E4%B8%80%E6%AC%A1%E6%95%B0%E6%8D%AE%E5%BA%93%E8%B6%85%E6%97%B6%E7%9A%84%E6%8E%92%E6%9F%A5%E5%88%86%E6%9E%90.html&title=一次数据库超时的排查分析 - 微笑流浪&summary=前提很长一段时间，我们部署的服务经常性的出现以下异常
+123456ERROR druid.sql.Statement - [statementLogError,148] - &#123;conn-10135, stmt-24201&#125; execute error. SELECT 1 FROM DUALcom.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failureThe last packet successfully received from the server was 3,741,977 milliseconds ago. The last packet sent successfully to the server was 3,741,978 milliseconds ago.&#x2F;&#x2F; 堆栈信息xxx"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qq.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-qzone" title="" rel="external nofollow noopener noreferrer"
+          
+          href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://sillybilly-share.top/%E4%B8%80%E6%AC%A1%E6%95%B0%E6%8D%AE%E5%BA%93%E8%B6%85%E6%97%B6%E7%9A%84%E6%8E%92%E6%9F%A5%E5%88%86%E6%9E%90.html&title=一次数据库超时的排查分析 - 微笑流浪&summary=前提很长一段时间，我们部署的服务经常性的出现以下异常
+123456ERROR druid.sql.Statement - [statementLogError,148] - &#123;conn-10135, stmt-24201&#125; execute error. SELECT 1 FROM DUALcom.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failureThe last packet successfully received from the server was 3,741,977 milliseconds ago. The last packet sent successfully to the server was 3,741,978 milliseconds ago.&#x2F;&#x2F; 堆栈信息xxx"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qzone.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-weibo" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://service.weibo.com/share/share.php?url=https://sillybilly-share.top/%E4%B8%80%E6%AC%A1%E6%95%B0%E6%8D%AE%E5%BA%93%E8%B6%85%E6%97%B6%E7%9A%84%E6%8E%92%E6%9F%A5%E5%88%86%E6%9E%90.html&title=一次数据库超时的排查分析 - 微笑流浪&summary=前提很长一段时间，我们部署的服务经常性的出现以下异常
+123456ERROR druid.sql.Statement - [statementLogError,148] - &#123;conn-10135, stmt-24201&#125; execute error. SELECT 1 FROM DUALcom.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failureThe last packet successfully received from the server was 3,741,977 milliseconds ago. The last packet sent successfully to the server was 3,741,978 milliseconds ago.&#x2F;&#x2F; 堆栈信息xxx"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/weibo.png">
+          
+        </a>
+      
+    
+  </div>
+</div>
+
+
+
+        
+      
+    </div>
+  </section>
+
+
+        
+        
+          <div class="prev-next">
+            
+            
+              <a class='next' href='/springboot%E5%BA%94%E7%94%A8https%E6%94%B9%E9%80%A0%E9%9A%8F%E7%AC%94.html'>
+                <p class='title'>springboot应用https改造随笔<i class="fas fa-chevron-right" aria-hidden="true"></i></p>
+                <p class='content'>前提为了迎合等保要求，本人秉承着安全(偷懒)的意识，决定在接手开发的短信服务上集成https。这里以springboot项目为例，通篇以流水账的形式，主要讲述如何生成证书、项目中如何集成以及对外...</p>
+              </a>
+            
+          </div>
+        
+      </section>
+    </article>
+  
+
+  
+    <!-- 显示推荐文章和评论 -->
+
+
+
+  <article class="post white-box comments shadow floatable">
+    <section class="article typo">
+      <p ct><i class='fas fa-comments'></i> 评论</p>
+      
+      
+      
+        <section id="comments">
+          <div id="lv-container" data-id="city" data-uid="MTAyMC80OTQ2OS8yNTk2MQ==">
+            <noscript><div><i class='fas fa-exclamation-triangle'>&nbsp;无法加载Livere评论系统，请确保您的网络能够正常访问。</div></noscript>
+          </div>
+        </section>
+      
+      
+      
+    </section>
+  </article>
+
+
+  
+
+
+
+
+<!-- 根据页面mathjax变量决定是否加载MathJax数学公式js -->
+
+
+
+  <script>
+    window.subData = {
+      title: '一次数据库超时的排查分析',
+      tools: true
+    }
+  </script>
+
+
+
+</div>
+<aside class='l_side'>
+  
+  
+
+  
+    
+    
+
+
+  <section class="widget toc-wrapper shadow floatable desktop mobile">
+    
+  <header>
+    
+      <i class="fas fa-list fa-fw" aria-hidden="true"></i><span class='name'>本文目录</span>
+    
+  </header>
+
+
+    <div class='content'>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一点点小问题"><span class="toc-text">一点点小问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#问题升级"><span class="toc-text">问题升级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#定位"><span class="toc-text">定位</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#解决"><span class="toc-text">解决</span></a></li></ol>
+    </div>
+  </section>
+
+
+  
+
+
+</aside>
+
+
+  
+  <footer class="clearfix white">
+    <br><br>
+    
+      
+        <div class="aplayer-container">
+          
+
+  
+    <meting-js
+      theme='#1BCDFC'
+      autoplay='false'
+      volume='0.7'
+      loop='all'
+      order='list'
+      fixed='false'
+      list-max-height='340px'
+      server='netease'
+      type='playlist'
+      id='4926244994'
+      list-folded='true'>
+    </meting-js>
+  
+
+
+        </div>
+      
+    
+      
+        <br>
+        <div class="social-wrapper">
+          
+            
+              <a href="/atom.xml"
+                class="social fas fa-rss flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="mailto:1579700874@qq.com"
+                class="social fas fa-envelope flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="https://github.com/silly-billy"
+                class="social fab fa-github flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+        </div>
+      
+    
+      
+        
+          <div><p>博客内容遵循 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener">署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</a></p>
+</div>
+        
+      
+    
+      
+        
+          <div><p>本站使用 <a href="https://volantis.js.org/" target="_blank" rel="noopener">Volantis</a> 作为主题 ， 总访问量为 <span id="busuanzi_value_site_uv"></span> 次</p>
+</div>
+        
+      
+    
+      
+        <div class='copyright'>
+        <p>[Copyright © 2019-2020 silly-billy]</p>
+
+        </div>
+      
+    
+  </footer>
+
+<script>setLoadingBarProgress(80);</script>
+
+
+      <script>setLoadingBarProgress(60);</script>
+    </div>
+    <a class="s-top fas fa-arrow-up fa-fw" href='javascript:void(0)'></a>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.min.js"></script>
+
+
+  <script>
+    
+    var SEARCH_SERVICE = "hexo" || "hexo";
+    var ROOT = "/" || "/";
+    if (!ROOT.endsWith('/')) ROOT += '/';
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/instant_page.js" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.js"></script>
+
+  <script type="text/javascript">
+    $(function() {
+      Waves.attach('.flat-btn', ['waves-button']);
+      Waves.attach('.float-btn', ['waves-button', 'waves-float']);
+      Waves.attach('.float-btn-light', ['waves-button', 'waves-float', 'waves-light']);
+      Waves.attach('.flat-box', ['waves-block']);
+      Waves.attach('.float-box', ['waves-block', 'waves-float']);
+      Waves.attach('.waves-image');
+      Waves.init();
+    });
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/busuanzi.pure.mini.js"></script>
+
+
+
+  
+  
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.backstretch.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var imgs=["https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud.jpg", "https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud-1.jpg"];
+        if ('true' == 'true') {
+          function shuffle(arr){
+            /*From countercurrent-time*/
+            var n = arr.length;
+            while(n--) {
+              var index = Math.floor(Math.random() * n);
+              var temp = arr[index];
+              arr[index] = arr[n];
+              arr[n] = temp;
+            }
+          }
+          shuffle(imgs);
+        }
+        if ('.cover') {
+          $('.cover').backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        } else {
+          $.backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        }
+      });
+    </script>
+  
+
+
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/APlayer.min.js" async></script>
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/Meting.min.js" async></script>
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+      if (typeof LivereTower === 'function') { return; }
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+      e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  </script>
+
+
+
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/app.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/search.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/comment_typing.js"></script>
+
+
+
+<!-- 复制 -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/clipboard.min.js"></script>
+<script>
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="fas fa-copy"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copyed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-clipboard-check');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPYED';
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-exclamation-triangle');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+<!-- fancybox -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.js"></script>
+<script>
+  let LAZY_LOAD_IMAGE = "";
+  $(".article-entry").find("fancybox").find("img").each(function () {
+      var element = document.createElement("a");
+      $(element).attr("data-fancybox", "gallery");
+      $(element).attr("href", $(this).attr("src"));
+      /* 图片采用懒加载处理时,
+       * 一般图片标签内会有个属性名来存放图片的真实地址，比如 data-original,
+       * 那么此处将原本的属性名src替换为对应属性名data-original,
+       * 修改如下
+       */
+       if (LAZY_LOAD_IMAGE) {
+         $(element).attr("href", $(this).attr("data-original"));
+       }
+      $(this).wrap(element);
+  });
+</script>
+
+
+
+
+
+
+<script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562' crossorigin='anonymous'></script>
+<ins class='adsbygoogle' style='display:block' data-ad-client='ca-pub-7706779639350562' data-ad-slot='8192807482' data-ad-format='auto' data-full-width-responsive='true'></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+
+  <script>setLoadingBarProgress(100);</script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

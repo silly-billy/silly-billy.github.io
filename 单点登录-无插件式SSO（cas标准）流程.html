@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html>
+<head hexo-theme='https://volantis.js.org/#blog'>
+  <meta charset="utf-8">
+  <!-- SEO相关 -->
+  
+    
+  
+  <!-- 渲染优化 -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- 页面元数据 -->
+  
+    <title>单点登录-无插件式SSO（cas标准）流程 - 微笑流浪</title>
+  
+    <meta name="keywords" content="sso">
+  
+  
+    <meta name="description" content="前提现有用户使用阿里的IDass作为统一身份认证平台，所以我们需要为此做一个定制化开发，舍弃公司原有的登录门户，转而对接阿里单点登录。由于之前并没有类似的经验，所以本人此次学到了不少单点登录的知识，在此做一些记录，方便以后查漏补缺。
+单点登录概述单点登录（SSO），英文全称为 Single Sign On。 SS...">
+  
+
+  <!-- feed -->
+  
+
+  <!-- import meta -->
+  
+
+  <!-- link -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css">
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10/dist/APlayer.min.css">
+  
+
+  <!-- import link -->
+  
+
+  <link rel="shortcut icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/favicon.ico">
+
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/style.css">
+
+  
+
+  <script>
+    function setLoadingBarProgress(num) {
+      document.getElementById('loading-bar').style.width=num+"%";
+    }
+  </script>
+
+  
+  
+  
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562" crossorigin="anonymous"></script>
+  
+</head>
+
+<body>
+  
+  <div id="loading-bar-wrapper">
+  <div id="loading-bar"></div>
+</div>
+<header class="l_header shadow floatable">
+
+  <div class='wrapper'>
+    <div class='nav-sub container--flex'>
+      <a class="logo flat-box"></a>
+      <ul class='switcher h-list'>
+        <li><a class="s-comment flat-btn fas fa-comments fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+          <li><a class="s-toc flat-btn fas fa-list fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+      </ul>
+    </div>
+		<div class="nav-main container container--flex">
+      
+        
+        <a class="logo flat-box" target="_self" href='/'>
+          
+          
+          
+          
+            SILLY-BILLY'S <b><sup style='color:#3AA757'>blog</sup></b>
+          
+        </a>
+      
+
+			<div class='menu navigation'>
+				<ul class='h-list'>
+          
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/
+                  
+                  
+                  
+                    id="home"
+                  >
+                  
+                    <i class='fas fa-home fa-fw fa-fw'></i>
+                  
+                  主页
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/categories/
+                  
+                  
+                  
+                    id="categories"
+                  >
+                  
+                    <i class='fas fa-folder-open fa-fw'></i>
+                  
+                  分类
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/tags/
+                  
+                  
+                  
+                    id="tags"
+                  >
+                  
+                    <i class='fas fa-tags fa-fw'></i>
+                  
+                  标签
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/archives/
+                  
+                  
+                  
+                    id="archives"
+                  >
+                  
+                    <i class='fas fa-archive fa-fw'></i>
+                  
+                  归档
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/404.html
+                  
+                  
+                  
+                    id="404html"
+                  >
+                  
+                    <i class='fas fa-link fa-fw'></i>
+                  
+                  友链
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/about/
+                  
+                  
+                  
+                    id="about"
+                  >
+                  
+                    <i class='fas fa-info-circle fa-fw'></i>
+                  
+                  关于
+                </a>
+                
+              </li>
+            
+          
+          
+				</ul>
+			</div>
+
+      
+        <div class="m_search">
+          <form name="searchform" class="form u-search-form">
+            <i class="icon fas fa-search fa-fw"></i>
+            <input type="text" class="input u-search-input" placeholder="搜索" />
+          </form>
+        </div>
+      
+
+			<ul class='switcher h-list'>
+				
+					<li><a class="s-search flat-btn fas fa-search fa-fw" target="_self" href='javascript:void(0)'></a></li>
+				
+				<li><a class="s-menu flat-btn fas fa-bars fa-fw" target="_self" href='javascript:void(0)'></a></li>
+			</ul>
+		</div>
+	</div>
+</header>
+<ul class="menu-phone navigation white-box">
+  
+  
+    <li>
+      <a class="flat-box" href=/
+        
+        
+        
+          id="home"
+        >
+        
+          <i class='fas fa-rss fa-fw'></i>
+        
+        博客
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/categories/
+        
+        
+        
+          id="categories"
+        >
+        
+          <i class='fas fa-folder-open fa-fw'></i>
+        
+        分类
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/tags/
+        
+        
+        
+          id="tags"
+        >
+        
+          <i class='fas fa-tags fa-fw'></i>
+        
+        标签
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/archives/
+        
+        
+        
+          id="archives"
+        >
+        
+          <i class='fas fa-archive fa-fw'></i>
+        
+        归档
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/404.html
+        
+        
+        
+          id="404html"
+        >
+        
+          <i class='fas fa-link fa-fw'></i>
+        
+        友链
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/about/
+        
+        
+        
+          id="about"
+        >
+        
+          <i class='fas fa-info-circle fa-fw'></i>
+        
+        关于
+      </a>
+    </li>
+  
+</ul>
+<script>setLoadingBarProgress(40);</script>
+
+
+
+  <div class="l_body nocover">
+    <div class='body-wrapper'>
+      
+
+<div class='l_main'>
+  
+
+  
+    <article id="post" class="post white-box shadow floatable article-type-post" itemscope itemprop="blogPost">
+      
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  
+    <h1 class="title">
+      <a href="/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95-%E6%97%A0%E6%8F%92%E4%BB%B6%E5%BC%8FSSO%EF%BC%88cas%E6%A0%87%E5%87%86%EF%BC%89%E6%B5%81%E7%A8%8B.html">
+        单点登录-无插件式SSO（cas标准）流程
+      </a>
+    </h1>
+  
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/cas/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>sso&nbsp;/&nbsp;cas</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2020年11月4日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+      <section class="article typo">
+        <div class="article-entry" itemprop="articleBody">
+          
+          <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>现有用户使用阿里的IDass作为统一身份认证平台，所以我们需要为此做一个定制化开发，舍弃公司原有的登录门户，转而对接阿里单点登录。由于之前并没有类似的经验，所以本人此次学到了不少单点登录的知识，在此做一些记录，方便以后查漏补缺。</p>
+<h2 id="单点登录概述"><a href="#单点登录概述" class="headerlink" title="单点登录概述"></a>单点登录概述</h2><p>单点登录（SSO），英文全称为 Single Sign On。 SSO 是指在多个应用系统中，用户只需要登录一次，就可以访问所有相互信任的应用系统。IDaaS SSO 服务用于解决同一公司不同业务应用之间的身份认证问题，只需要登录一次，即可访问所有添加的应用。</p>
+<a id="more"></a>
+
+<h3 id="插件式SSO（JWT）"><a href="#插件式SSO（JWT）" class="headerlink" title="插件式SSO（JWT）"></a>插件式SSO（JWT）</h3><p>JWT 协议的流程是，浏览器在 IDaaS 中发起一个 SSO 请求的时候，IDaaS 会利用秘钥产生一个token ，然后将 token 放到请求里面作为参数 id_token 的值传到业务系统中去，业务系统就需要解析这个 token 进行身份识别，但是解析token 的关键就是需要集成我们提供的一个解析使用的 SDK，结合业务系统在 IDaaS 中添加应用的时候生成的一个不变的公钥，SDK+公钥才能对 token 进行校验识别。</p>
+<h3 id="无插件式SSO（Cas标准）"><a href="#无插件式SSO（Cas标准）" class="headerlink" title="无插件式SSO（Cas标准）"></a>无插件式SSO（Cas标准）</h3><p>CAS 协议的流程是浏览器在 IDaaS 中发起一个 SSO 请求的时候 IDaaS 会产生一个一次性随机code（类似于 JWT 中的 token ）作为参数 code 的值传到业务系统，然后业务系统并不解析这个code，而是通过一个 callback 回调在将其原封不动的传给 IDaaS ， IDaaS 对这个code进行验证，如果是我们传过去的就说明请求合法，IDaaS 会将用户信息传给业务系统，如果不是就验证失败。</p>
+<p>本着代码改动量最少的优先原则，此次改造选取系统原有单点登录的方式，即以cas方式接入阿里平台。</p>
+<h2 id="cas原理与协议"><a href="#cas原理与协议" class="headerlink" title="cas原理与协议"></a>cas原理与协议</h2><p>使用CAS 标准时，首先是由 CAS Client 发起， CAS Client 会重定向到 CAS Server（由 IDaaS 充当）进行登录，由 CAS Server 进行账户校验且多个 CAS Client 之间可以共享登录的 session ，Server 和Client 是一对多的关系；</p>
+<p>从结构上看，CAS 包含两个部分： CAS Server 和 CAS Client 。 CAS Server 需要独立部署，主要负责对用户的认证工作； CAS Client 负责处理对客户端受保护资源的访问请求，需要登录时，重定向到CAS Server。</p>
+<p>下图是标准 CAS 最基本的协议过程：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/cas/cas%E5%8D%8F%E8%AE%AE%E8%BF%87%E7%A8%8B.png" alt="cas协议过程"></p>
+<p style="text-indent:2em">CAS Client 与受保护的客户端应用部署在一起，以 Filter 方式保护受保护的资源。对于访问受保护资源的每个 Web 请求， CAS Client 会分析该请求的 Http 请求中是否包含 Service Ticket ，如果没
+有，则说明当前用户尚未登录，于是将请求重定向到指定好的 CAS Server 登录地址，并传递 Service（也就是要访问的目的资源地址），以便登录成功过后转回该地址。</p>
+<p style="text-indent:2em">用户在 上图流程中的 第 3 步 输入认证信息，如果登录成功， CAS Server 随机产生一个相当长度、唯一、不可伪造的 Service Ticket ，并缓存以待将来验证，之后系统自动重定向到 Service 所在地址，并为客户端浏览器设置一个 Ticket Granted Cookie（TGC）， CAS Client 在拿到 Service 和新产生的 Ticket 过后，在第 5，6 步中与 CAS Server 进行身份核实，以确保 Service Ticket 的合法性。</p>
+<p style="text-indent:2em">而在 IDaaS 中， 一个 CAS （标准）应用实现了标准的 CAS 流程。它充当一个 CAS Server的角色。当CAS client 决定使用 CAS （标准）应用作为 CAS Server 时。在登录认证时需要使用 IDaaS 系统中公司的主账号，密码进行认证。</p>
+
+<h2 id="cas接入验证"><a href="#cas接入验证" class="headerlink" title="cas接入验证"></a>cas接入验证</h2><p>阿里方面并没有接入外网的测试环境，但其符合原生的cas标准，所以为了方便验证，需要在本地搭建一个cas服务。</p>
+<h3 id="cas服务器端搭建"><a href="#cas服务器端搭建" class="headerlink" title="cas服务器端搭建"></a>cas服务器端搭建</h3><p>找一个编译后的版本，比如V4.0.0，下载地址：<a href="https://github.com/apereo/cas/releases/tag/v4.0.0" target="_blank" rel="noopener">https://github.com/apereo/cas/releases/tag/v4.0.0</a><br>将下载好的压缩包解压，并将modules下的cas-server-webapp-4.0.0.war（改名为cas.war）拿出来放到tomcat下部署，当前如果是作为练习的话，可以修改配置文件去掉https的要求。<br>1、WEB-INF/deployerConfigContext.xml修改,添加 p:requireSecure=”false”配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;bean id&#x3D;&quot;proxyAuthenticationHandler&quot; class&#x3D;&quot;org.jasig.cas.authentication.handler.support.HttpBasedServiceCredentialsAuthenticationHandler&quot;</span><br><span class="line">          p:httpClient-ref&#x3D;&quot;httpClient&quot; p:requireSecure&#x3D;&quot;false&quot; &#x2F;&gt;</span><br></pre></td></tr></table></figure>
+<p>2、WEB-INF/spring-configuration/ticketGrantingTicketCookieGenerator.xml中将p:cookieSecure置为false</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;bean id&#x3D;&quot;ticketGrantingTicketCookieGenerator&quot; class&#x3D;&quot;org.jasig.cas.web.support.CookieRetrievingCookieGenerator&quot;</span><br><span class="line">		p:cookieSecure&#x3D;&quot;false&quot;</span><br><span class="line">		p:cookieMaxAge&#x3D;&quot;-1&quot;</span><br><span class="line">		p:cookieName&#x3D;&quot;CASTGC&quot;</span><br><span class="line">		p:cookiePath&#x3D;&quot;&#x2F;cas&quot; &#x2F;&gt;</span><br></pre></td></tr></table></figure>
+<p>3、WEB-INF/spring-configuration/warnCookieGenerator.xml中p:cookieSecure置为false</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;bean id&#x3D;&quot;warnCookieGenerator&quot; class&#x3D;&quot;org.jasig.cas.web.support.CookieRetrievingCookieGenerator&quot;</span><br><span class="line">		p:cookieSecure&#x3D;&quot;false&quot;</span><br><span class="line">		p:cookieMaxAge&#x3D;&quot;-1&quot;</span><br><span class="line">		p:cookieName&#x3D;&quot;CASPRIVACY&quot;</span><br><span class="line">		p:cookiePath&#x3D;&quot;&#x2F;cas&quot; &#x2F;&gt;</span><br></pre></td></tr></table></figure>
+<p>4、完成上述配置后就可以通过<a href="http://ip:port/cas/login">http://ip:port/cas/login</a> 访问cas server了。<red>当然该用户需要拥有系统权限，我们可以在WEB-INF/deployerConfigContext.xml配置真实的用户（实际上这里是需要JDBC支持的）,例如：</red></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;bean id&#x3D;&quot;primaryAuthenticationHandler&quot;</span><br><span class="line">        class&#x3D;&quot;org.jasig.cas.authentication.AcceptUsersAuthenticationHandler&quot;&gt;</span><br><span class="line">      &lt;property name&#x3D;&quot;users&quot;&gt;</span><br><span class="line">          &lt;map&gt;</span><br><span class="line">              &lt;entry key&#x3D;&quot;admin&quot; value&#x3D;&quot;&quot;&#x2F;&gt;</span><br><span class="line">          &lt;&#x2F;map&gt;</span><br><span class="line">      &lt;&#x2F;property&gt;</span><br><span class="line">  &lt;&#x2F;bean&gt;</span><br></pre></td></tr></table></figure>
+<p>效果图：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/cas/cas-server%E7%99%BB%E5%BD%95%E9%A6%96%E9%A1%B5.png" alt="result"></p>
+<h3 id="cas客户端验证"><a href="#cas客户端验证" class="headerlink" title="cas客户端验证"></a>cas客户端验证</h3><p>注：项目中需要引入<code>cas-client-core-{version}.jar</code></p>
+<p>验证过程采用原生的方式配置，需要在项目的web.xml中配置（主要是用户认证和票据认证）</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 用于单点退出，该过滤器用于实现单点登出功能，可选配置 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">listener</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">listener-class</span>&gt;</span>org.jasig.cas.client.session.SingleSignOutHttpSessionListener<span class="tag">&lt;/<span class="name">listener-class</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">listener</span>&gt;</span>  </span><br><span class="line">  </span><br><span class="line"><span class="comment">&lt;!-- 该过滤器用于实现单点登出功能，可选配置 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CAS Single Sign Out Filter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>org.jasig.cas.client.session.SingleSignOutFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CAS Single Sign Out Filter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br><span class="line"></span><br><span class="line"> <span class="comment">&lt;!-- 该过滤器负责用户的认证工作，必须启用它 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CASFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>org.jasig.cas.client.authentication.AuthenticationFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">init-param</span>&gt;</span>  </span><br><span class="line">        <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>casServerLoginUrl<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span>  </span><br><span class="line">        <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>https://localhost:18080/cas/login<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span>  </span><br><span class="line">        <span class="comment">&lt;!--这里的server是服务端的IP --&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">init-param</span>&gt;</span>  </span><br><span class="line">        <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>serverName<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span>  </span><br><span class="line">        <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>http://localhost:8080/CallBillAnalysis<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CASFilter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span>  </span><br><span class="line">  </span><br><span class="line"><span class="comment">&lt;!-- 该过滤器负责对Ticket的校验工作，必须启用它 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CAS Validation Filter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>  </span><br><span class="line">        org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">init-param</span>&gt;</span>  </span><br><span class="line">        <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>casServerUrlPrefix<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span>  </span><br><span class="line">        <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>https://localhost:18080/cas<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">init-param</span>&gt;</span>  </span><br><span class="line">        <span class="tag">&lt;<span class="name">param-name</span>&gt;</span>serverName<span class="tag">&lt;/<span class="name">param-name</span>&gt;</span>  </span><br><span class="line">        <span class="tag">&lt;<span class="name">param-value</span>&gt;</span>http://localhost:8080<span class="tag">&lt;/<span class="name">param-value</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">init-param</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CAS Validation Filter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span>  </span><br><span class="line">  </span><br><span class="line"><span class="comment">&lt;!-- 该过滤器负责实现HttpServletRequest请求的包裹， 比如允许开发者通过HttpServletRequest的getRemoteUser()方法获得SSO登录用户的登录名，可选配置 --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CAS HttpServletRequest Wrapper Filter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>  </span><br><span class="line">        org.jasig.cas.client.util.HttpServletRequestWrapperFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CAS HttpServletRequest Wrapper Filter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span>  </span><br><span class="line">  </span><br><span class="line"><span class="comment">&lt;!-- 该过滤器使得开发者可以通过org.jasig.cas.client.util.AssertionHolder来获取用户的登录名。 比如AssertionHolder.getAssertion().getPrincipal().getName() --&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CAS Assertion Thread Local Filter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-class</span>&gt;</span>org.jasig.cas.client.util.AssertionThreadLocalFilter<span class="tag">&lt;/<span class="name">filter-class</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">filter-mapping</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">filter-name</span>&gt;</span>CAS Assertion Thread Local Filter<span class="tag">&lt;/<span class="name">filter-name</span>&gt;</span>  </span><br><span class="line">    <span class="tag">&lt;<span class="name">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="name">url-pattern</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;/<span class="name">filter-mapping</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>然后启动web项目，可以在cas server控制台中看到，单点登录的验证被cas分成了以下四个流程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">2020-11-05 15:02:09,110 INFO [com.github.inspektr.audit.support.Slf4jLoggingAudi</span><br><span class="line">tTrailManager] - &lt;Audit trail record BEGIN</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line">WHO: audit:unknown</span><br><span class="line">WHAT: supplied credentials: [admin+password]</span><br><span class="line">ACTION: AUTHENTICATION_SUCCESS</span><br><span class="line">APPLICATION: CAS</span><br><span class="line">WHEN: Thu Nov 05 15:02:09 CST 2020</span><br><span class="line">CLIENT IP ADDRESS: 0:0:0:0:0:0:0:1</span><br><span class="line">SERVER IP ADDRESS: 0:0:0:0:0:0:0:1</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line"></span><br><span class="line">&gt;</span><br><span class="line">2020-11-05 15:02:09,115 INFO [com.github.inspektr.audit.support.Slf4jLoggingAudi</span><br><span class="line">tTrailManager] - &lt;Audit trail record BEGIN</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line">WHO: audit:unknown</span><br><span class="line">WHAT: TGT-1-eGvRWwn7rsB49Fll1eubp9vIWPY2G3hgsdsRke6p2rkSBCryRQ-cas01.example.org</span><br><span class="line"></span><br><span class="line">ACTION: TICKET_GRANTING_TICKET_CREATED</span><br><span class="line">APPLICATION: CAS</span><br><span class="line">WHEN: Thu Nov 05 15:02:09 CST 2020</span><br><span class="line">CLIENT IP ADDRESS: 0:0:0:0:0:0:0:1</span><br><span class="line">SERVER IP ADDRESS: 0:0:0:0:0:0:0:1</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line"></span><br><span class="line">&gt;</span><br><span class="line">2020-11-05 15:02:09,122 INFO [org.jasig.cas.CentralAuthenticationServiceImpl] -</span><br><span class="line">&lt;Granted service ticket [ST-1-UsZN9ffonNXSOH1B9Qhx-cas01.example.org] for servic</span><br><span class="line">e [http:&#x2F;&#x2F;localhost:8080&#x2F;CallBillAnalysis&#x2F;CallBillAnalysis&#x2F;] for user [admin]&gt;</span><br><span class="line">2020-11-05 15:02:09,124 INFO [com.github.inspektr.audit.support.Slf4jLoggingAudi</span><br><span class="line">tTrailManager] - &lt;Audit trail record BEGIN</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line">WHO: admin</span><br><span class="line">WHAT: ST-1-UsZN9ffonNXSOH1B9Qhx-cas01.example.org for http:&#x2F;&#x2F;localhost:8080&#x2F;Call</span><br><span class="line">BillAnalysis&#x2F;CallBillAnalysis&#x2F;</span><br><span class="line">ACTION: SERVICE_TICKET_CREATED</span><br><span class="line">APPLICATION: CAS</span><br><span class="line">WHEN: Thu Nov 05 15:02:09 CST 2020</span><br><span class="line">CLIENT IP ADDRESS: 0:0:0:0:0:0:0:1</span><br><span class="line">SERVER IP ADDRESS: 0:0:0:0:0:0:0:1</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line"></span><br><span class="line">&gt;</span><br><span class="line">2020-11-05 15:02:09,156 INFO [com.github.inspektr.audit.support.Slf4jLoggingAudi</span><br><span class="line">tTrailManager] - &lt;Audit trail record BEGIN</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line">WHO: audit:unknown</span><br><span class="line">WHAT: ST-1-UsZN9ffonNXSOH1B9Qhx-cas01.example.org</span><br><span class="line">ACTION: SERVICE_TICKET_VALIDATED</span><br><span class="line">APPLICATION: CAS</span><br><span class="line">WHEN: Thu Nov 05 15:02:09 CST 2020</span><br><span class="line">CLIENT IP ADDRESS: 127.0.0.1</span><br><span class="line">SERVER IP ADDRESS: 127.0.0.1</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br></pre></td></tr></table></figure>
+<p><code>Service ticket(ST)</code>：服务票据，由KDC的TGS发放。任何一台Workstation都需要拥有一张有效的 Service Ticket 才能访问域内部的应用(Applications)。<br><code>Ticket Granting tieckt(TGT)</code>：票据授权票据，由KDC的AS发放。即获取这样一张票据后，以后申请各种其他服务票据(ST)便不必再向KDC提交身份认证信息(准确术语是Credentials)。</p>
+<ul>
+<li>第一步、第二步,用户通过<code>Authentication service(AS)</code>即认证服务，之后索取credentials，用于发放TGT。</li>
+<li>第三步，由于cas-client认证需要ST（票据服务），所以需要由<code>ticket-granting service(TGS)即票据授权服务</code>拿到上一步的TGT，并创建ST。</li>
+<li>第四步，cas-client拿到ST之后，将票据和项目启动默认地址提交调用TicketValidator#validate(ST，#{project-start-default-url})提交给cas-server做验证。</li>
+</ul>
+<p>票据验证成功后，我们可以拿到用户名以及其它信息，用于系统后续的权限认证。</p>
+<h3 id="项目接入cas"><a href="#项目接入cas" class="headerlink" title="项目接入cas"></a>项目接入cas</h3><p>在此之前，项目里拥有自己的单点登录模块，并重写了cas-client相关验证方法，所以我们沿用之前的配置的时候，难免有些地方会有出入，需要对原有代码进行改造。</p>
+<h4 id="ST验证的Serice-url不一致"><a href="#ST验证的Serice-url不一致" class="headerlink" title="ST验证的Serice-url不一致"></a>ST验证的Serice-url不一致</h4><p>保证cas-server启动的情况下，将项目参数（sso server地址）配置完成，启动项目,成功被cas-server拦截在登录页面。</p>
+<p>在输入用户名和密码后，页面一直在重定向跳转(cas-server用户认证成功，但在后续操作中失败导致不停的回滚重试)。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/cas/%E9%A1%B5%E9%9D%A2%E9%87%8D%E5%AE%9A%E5%90%91.png" alt="页面重定向"></p>
+<p>并且服务器端报错，log日志如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">2020-11-05 18:11:15,221 ERROR [org.jasig.cas.CentralAuthenticationServiceImpl] -</span><br><span class="line"> &lt;ServiceTicket [ST-56-jt4cn4404nJEpJgYguD2-cas01.example.org] with service [htt</span><br><span class="line">p:&#x2F;&#x2F;localhost:8080&#x2F;CallBillAnalysis&#x2F;cas] does not match supplied service [http:&#x2F;</span><br><span class="line">&#x2F;localhost:8080&#x2F;CallBillAnalysis&#x2F;cas&#x2F;CallBillAnalysis&#x2F;cas]&gt;</span><br><span class="line">2020-11-05 18:11:15,222 INFO [com.github.inspektr.audit.support.Slf4jLoggingAudi</span><br><span class="line">tTrailManager] - &lt;Audit trail record BEGIN</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line">WHO: audit:unknown</span><br><span class="line">WHAT: ST-56-jt4cn4404nJEpJgYguD2-cas01.example.org</span><br><span class="line">ACTION: SERVICE_TICKET_VALIDATE_FAILED</span><br><span class="line">APPLICATION: CAS</span><br><span class="line">WHEN: Thu Nov 05 18:11:15 CST 2020</span><br><span class="line">CLIENT IP ADDRESS: 127.0.0.1</span><br><span class="line">SERVER IP ADDRESS: 127.0.0.1</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br></pre></td></tr></table></figure>
+<p>从服务器日志可以看出，cas-client拿到票据信息向服务端校验的时候失败了，失败原因是<a href="http://localhost:8080/CallBillAnalysis/cas和http://localhost:8080/CallBillAnalysis/cas/CallBillAnalysis/cas不匹配，在项目中发现这样一段代码：" target="_blank" rel="noopener">http://localhost:8080/CallBillAnalysis/cas和http://localhost:8080/CallBillAnalysis/cas/CallBillAnalysis/cas不匹配，在项目中发现这样一段代码：</a></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getCasService</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		StringBuffer req = request.getRequestURL();</span><br><span class="line">		req.substring(<span class="number">0</span>, req.indexOf(request.getContextPath()));</span><br><span class="line">		<span class="comment">//这里又拼了一次</span></span><br><span class="line">		req.append(request.getContextPath()).append(<span class="string">"/cas"</span>);</span><br><span class="line">		<span class="keyword">return</span> req.toString();</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>把req.append(request.getContextPath()).append(“/cas”);这段代码注释掉，不再报此问题。</p>
+<h4 id="票据验证的超时处理"><a href="#票据验证的超时处理" class="headerlink" title="票据验证的超时处理"></a>票据验证的超时处理</h4><p>页面仍然疯狂重定向，好巧不巧的我把断点打在了票据验证的方法上，因为需要查看票据验证的内部逻辑，所以有些耗时，而这种操作一般会大于ST票据的默认有效期（10秒），导致cas-server控制台又抛出错误</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">2020-11-05 18:31:44,126 INFO [org.jasig.cas.CentralAuthenticationServiceImpl] -</span><br><span class="line">&lt;ServiceTicket [ST-70-QmOkXqbaJcuKkZ5hqkWf-cas01.example.org] has expired.&gt;</span><br><span class="line">2020-11-05 18:31:44,130 INFO [com.github.inspektr.audit.support.Slf4jLoggingAudi</span><br><span class="line">tTrailManager] - &lt;Audit trail record BEGIN</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line">WHO: audit:unknown</span><br><span class="line">WHAT: ST-70-QmOkXqbaJcuKkZ5hqkWf-cas01.example.org</span><br><span class="line">ACTION: SERVICE_TICKET_VALIDATE_FAILED</span><br><span class="line">APPLICATION: CAS</span><br><span class="line">WHEN: Thu Nov 05 18:31:44 CST 2020</span><br><span class="line">CLIENT IP ADDRESS: 127.0.0.1</span><br><span class="line">SERVER IP ADDRESS: 127.0.0.1</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br></pre></td></tr></table></figure>
+<p>从日志中可以看出ServiceTicket has expired 已经过期了。所以我们需要修改cas server票据有效期的默认配置。</p>
+<p>修改CAS服务器本身的超时判断时间,在WEB-INF/cas.properties中修改,将st.timeToKillInSeconds（默认10s）参数调大</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">st.timeToKillInSeconds&#x3D;500</span><br></pre></td></tr></table></figure>
+<h4 id="无法获取到用户名"><a href="#无法获取到用户名" class="headerlink" title="无法获取到用户名"></a>无法获取到用户名</h4><p>此时如果不出意外的话，TicketValidator#validate会校验成功，server控制台会出现SERVICE_TICKET_VALIDATED校验成功的字段。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">2020-11-05 18:58:15,305 INFO [com.github.inspektr.audit.support.Slf4jLoggingAudi</span><br><span class="line">tTrailManager] - &lt;Audit trail record BEGIN</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br><span class="line">WHO: audit:unknown</span><br><span class="line">WHAT: ST-71-4uniggzr4MdFDUr3R936-cas01.example.org</span><br><span class="line">ACTION: SERVICE_TICKET_VALIDATED</span><br><span class="line">APPLICATION: CAS</span><br><span class="line">WHEN: Thu Nov 05 18:58:15 CST 2020</span><br><span class="line">CLIENT IP ADDRESS: 127.0.0.1</span><br><span class="line">SERVER IP ADDRESS: 127.0.0.1</span><br><span class="line">&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;</span><br></pre></td></tr></table></figure>
+<p>但拿到的<code>casAssertion</code>却无法获取到登录名，调试结果如下：<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/cas/%E6%97%A0%E6%B3%95%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7%E5%90%8D.png" alt="用户名无法访问"></p>
+<p>在一番分析后，定位到AbstractUrlBasedTicketValidator#validate方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Assertion <span class="title">validate</span><span class="params">(String ticket, String service)</span> <span class="keyword">throws</span> TicketValidationException </span>&#123;</span><br><span class="line">	    <span class="comment">//这里请求的地址为：http://localhost:18080/cas/validate?ticket=ST-74-ApfoBG1Eed6P4guj3Cb3-cas01.example.org&amp;service=http://localhost:8080/CallBillAnalysis/cas</span></span><br><span class="line">       String validationUrl = <span class="keyword">this</span>.constructValidationUrl(ticket, service);</span><br><span class="line">       <span class="keyword">if</span> (<span class="keyword">this</span>.log.isDebugEnabled()) &#123;</span><br><span class="line">           <span class="keyword">this</span>.log.debug(<span class="string">"Constructing validation url: "</span> + validationUrl);</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       <span class="keyword">try</span> &#123;</span><br><span class="line">           <span class="keyword">this</span>.log.debug(<span class="string">"Retrieving response from server."</span>);</span><br><span class="line">           <span class="comment">//这里返回response为："yes\nadmin\n"</span></span><br><span class="line">           String serverResponse = <span class="keyword">this</span>.retrieveResponseFromServer(<span class="keyword">new</span> URL(validationUrl), ticket);</span><br><span class="line">           <span class="keyword">if</span> (serverResponse == <span class="keyword">null</span>) &#123;</span><br><span class="line">               <span class="keyword">throw</span> <span class="keyword">new</span> TicketValidationException(<span class="string">"The CAS server returned no response."</span>);</span><br><span class="line">           &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">               <span class="keyword">if</span> (<span class="keyword">this</span>.log.isDebugEnabled()) &#123;</span><br><span class="line">                   <span class="keyword">this</span>.log.debug(<span class="string">"Server response: "</span> + serverResponse);</span><br><span class="line">               &#125;</span><br><span class="line"></span><br><span class="line">               <span class="keyword">return</span> <span class="keyword">this</span>.parseResponseFromServer(serverResponse);</span><br><span class="line">           &#125;</span><br><span class="line">       &#125; <span class="keyword">catch</span> (MalformedURLException var5) &#123;</span><br><span class="line">           <span class="keyword">throw</span> <span class="keyword">new</span> TicketValidationException(var5);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   <span class="comment">//TuscTicketValidator#parseResponseFromServer</span></span><br><span class="line">   <span class="function"><span class="keyword">protected</span> Assertion <span class="title">parseResponseFromServer</span><span class="params">(<span class="keyword">final</span> String response)</span> <span class="keyword">throws</span> TicketValidationException </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!response.startsWith(<span class="string">"yes"</span>)) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> TicketValidationException(<span class="string">"sso Server could not validate ticket."</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		<span class="keyword">final</span> BufferedReader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> StringReader(response));</span><br><span class="line">		reader.readLine();</span><br><span class="line"></span><br><span class="line">		String name = <span class="string">""</span>;</span><br><span class="line">		String line = <span class="string">""</span>;</span><br><span class="line">		Map userMap = <span class="keyword">new</span> HashMap();</span><br><span class="line">		<span class="comment">//虽然response中包含用户名　但在这里Assertion装载的时候　显然并没有"=",导致name=null</span></span><br><span class="line">		<span class="keyword">while</span> ((line = reader.readLine()) != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">int</span> equalPositon = line.indexOf(<span class="string">"="</span>);</span><br><span class="line">			<span class="keyword">if</span> (equalPositon != -<span class="number">1</span>) &#123;</span><br><span class="line">				String key = line.substring(<span class="number">0</span>, equalPositon);</span><br><span class="line">				String value = line.substring(equalPositon + <span class="number">1</span>, line.length());</span><br><span class="line">				<span class="keyword">if</span> (!CommonUtils.isBlank(value))</span><br><span class="line">					value = URLDecoder.decode(value, <span class="string">"UTF-8"</span>);</span><br><span class="line">				<span class="keyword">if</span> (key.equals(<span class="string">"name"</span>)) &#123;</span><br><span class="line">					name = value;</span><br><span class="line">				&#125;</span><br><span class="line">				userMap.put(key, value);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		Assertion assertion = <span class="keyword">new</span> AssertionImpl(<span class="keyword">new</span> AttributePrincipalImpl(name, userMap));</span><br><span class="line">		<span class="keyword">return</span> assertion;</span><br><span class="line">	&#125; <span class="keyword">catch</span> (<span class="keyword">final</span> IOException e) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> TicketValidationException(<span class="string">"Unable to parse response."</span>, e);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但之前验证的demo中是可以获取到用户名的，所以把之前验证的流程又跑了一遍，debug到同处的代码,发现如下的结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">validationUrl &#x3D; http:&#x2F;&#x2F;localhost:18080&#x2F;cas&#x2F;serviceValidate?ticket&#x3D;ST-77-H20CVLaec7ndH20J5tIv-cas01.example.org&amp;service&#x3D;http:&#x2F;&#x2F;localhost:8080&#x2F;CallBillAnalysis&#x2F;CallBillAnalysis&#x2F;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">serverResponse &#x3D; &lt;cas:serviceResponse xmlns:cas&#x3D;&#39;http:&#x2F;&#x2F;www.yale.edu&#x2F;tp&#x2F;cas&#39;&gt;</span><br><span class="line">	&lt;cas:authenticationSuccess&gt;</span><br><span class="line">		&lt;cas:user&gt;admin&lt;&#x2F;cas:user&gt;</span><br><span class="line">        </span><br><span class="line">        </span><br><span class="line">	&lt;&#x2F;cas:authenticationSuccess&gt;</span><br><span class="line">&lt;&#x2F;cas:serviceResponse&gt;</span><br></pre></td></tr></table></figure>
+
+<p>通过postman调用两种不同的validationUrl，发现后者即以<a href="http://localhost:18080/cas/serviceValidate请求的票据验证才会返回这种xml形式的结果。" target="_blank" rel="noopener">http://localhost:18080/cas/serviceValidate请求的票据验证才会返回这种xml形式的结果。</a></p>
+<p>以此可以定位到两者构造的TicketValidator类不相同，在UIMRealm#doGetAuthenticationInfo方法中</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//方法构造TicketValidator</span></span><br><span class="line">TicketValidator ticketValidator = ensureTicketValidator();</span><br><span class="line"></span><br><span class="line"><span class="comment">//原生方法　最终会创建Cas20ServiceTicketValidator类对象</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> TicketValidator <span class="title">createTicketValidator</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    String urlPrefix = <span class="keyword">this</span>.getCasServerUrlPrefix();</span><br><span class="line">    <span class="keyword">return</span> (TicketValidator)(<span class="string">"saml"</span>.equalsIgnoreCase(<span class="keyword">this</span>.getValidationProtocol()) ? <span class="keyword">new</span> Saml11TicketValidator(urlPrefix) : <span class="keyword">new</span> Cas20ServiceTicketValidator(urlPrefix));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Cas20ServiceTicketValidator#getUrlSuffix() -&gt; return "serviceValidate"</span><br><span class="line"></span><br><span class="line"><span class="comment">//平台改造重写了createTicketValidator()方法</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> TicketValidator <span class="title">createTicketValidator</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	String urlPrefix = getCasServerUrlPrefix();</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> TuscTicketValidator(urlPrefix);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">TuscTicketValidator#getUrlSuffix() -&gt; return "validate"</span><br></pre></td></tr></table></figure>
+<p>最后将此实例构造类替换为Cas20ServiceTicketValidator，这样就能够正确解析到用户名了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> TicketValidator <span class="title">createTicketValidator</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	String urlPrefix = getCasServerUrlPrefix();</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Cas20ServiceTicketValidator(urlPrefix);</span><br><span class="line">	<span class="comment">//return new TuscTicketValidator(urlPrefix);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="LAST-BUT-NOT-LEAST"><a href="#LAST-BUT-NOT-LEAST" class="headerlink" title="LAST BUT NOT LEAST"></a>LAST BUT NOT LEAST</h4><p>通过获取到的用户名，查询数据库内人员组织信息，放入shiro中作权限管理 （no longer show it）</p>
+
+          
+            <br>
+            
+  
+    
+    
+
+<section class="widget copyright  desktop mobile">
+  <div class='content'>
+    
+      <blockquote>
+        
+          
+            <p>博客内容遵循 署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</p>
+
+          
+        
+          
+            <p>本文永久链接是：<a href=https://sillybilly-share.top/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95-%E6%97%A0%E6%8F%92%E4%BB%B6%E5%BC%8FSSO%EF%BC%88cas%E6%A0%87%E5%87%86%EF%BC%89%E6%B5%81%E7%A8%8B.html>https://sillybilly-share.top/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95-%E6%97%A0%E6%8F%92%E4%BB%B6%E5%BC%8FSSO%EF%BC%88cas%E6%A0%87%E5%87%86%EF%BC%89%E6%B5%81%E7%A8%8B.html</a></p>
+          
+        
+      </blockquote>
+    
+  </div>
+</section>
+
+  
+
+  
+    
+    
+
+<section class="widget qrcode  desktop mobile">
+  
+
+  <div class='content article-entry'>
+    
+  </div>
+</section>
+
+  
+
+
+          
+        </div>
+        
+          
+
+
+  <section class='meta' id="footer-meta">
+    <div class='new-meta-box'>
+      
+        
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2022-11-24T09:35:09+08:00">
+  <a class='notlink'>
+    <i class="fas fa-save" aria-hidden="true"></i>
+    <p>更新于：2022年11月24日</p>
+  </a>
+</div>
+
+        
+      
+        
+          
+  
+  <div class="new-meta-item meta-tags"><a class="tag" href="/tags/sso/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>sso</p></a></div>
+
+
+        
+      
+        
+          
+
+        
+      
+        
+          
+  <div class="new-meta-item share -mob-share-list">
+  <div class="-mob-share-list share-body">
+    
+      
+        <a class="-mob-share-qq" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://connect.qq.com/widget/shareqq/index.html?url=https://sillybilly-share.top/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95-%E6%97%A0%E6%8F%92%E4%BB%B6%E5%BC%8FSSO%EF%BC%88cas%E6%A0%87%E5%87%86%EF%BC%89%E6%B5%81%E7%A8%8B.html&title=单点登录-无插件式SSO（cas标准）流程 - 微笑流浪&summary=前提现有用户使用阿里的IDass作为统一身份认证平台，所以我们需要为此做一个定制化开发，舍弃公司原有的登录门户，转而对接阿里单点登录。由于之前并没有类似的经验，所以本人此次学到了不少单点登录的知识，在此做一些记录，方便以后查漏补缺。
+单点登录概述单点登录（SSO），英文全称为 Single Sign On。 SSO 是指在多个应用系统中，用户只需要登录一次，就可以访问所有相互信任的应用系统。IDaaS SSO 服务用于解决同一公司不同业务应用之间的身份认证问题，只需要登录一次，即可访问所有添加的应用。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qq.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-qzone" title="" rel="external nofollow noopener noreferrer"
+          
+          href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://sillybilly-share.top/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95-%E6%97%A0%E6%8F%92%E4%BB%B6%E5%BC%8FSSO%EF%BC%88cas%E6%A0%87%E5%87%86%EF%BC%89%E6%B5%81%E7%A8%8B.html&title=单点登录-无插件式SSO（cas标准）流程 - 微笑流浪&summary=前提现有用户使用阿里的IDass作为统一身份认证平台，所以我们需要为此做一个定制化开发，舍弃公司原有的登录门户，转而对接阿里单点登录。由于之前并没有类似的经验，所以本人此次学到了不少单点登录的知识，在此做一些记录，方便以后查漏补缺。
+单点登录概述单点登录（SSO），英文全称为 Single Sign On。 SSO 是指在多个应用系统中，用户只需要登录一次，就可以访问所有相互信任的应用系统。IDaaS SSO 服务用于解决同一公司不同业务应用之间的身份认证问题，只需要登录一次，即可访问所有添加的应用。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qzone.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-weibo" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://service.weibo.com/share/share.php?url=https://sillybilly-share.top/%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95-%E6%97%A0%E6%8F%92%E4%BB%B6%E5%BC%8FSSO%EF%BC%88cas%E6%A0%87%E5%87%86%EF%BC%89%E6%B5%81%E7%A8%8B.html&title=单点登录-无插件式SSO（cas标准）流程 - 微笑流浪&summary=前提现有用户使用阿里的IDass作为统一身份认证平台，所以我们需要为此做一个定制化开发，舍弃公司原有的登录门户，转而对接阿里单点登录。由于之前并没有类似的经验，所以本人此次学到了不少单点登录的知识，在此做一些记录，方便以后查漏补缺。
+单点登录概述单点登录（SSO），英文全称为 Single Sign On。 SSO 是指在多个应用系统中，用户只需要登录一次，就可以访问所有相互信任的应用系统。IDaaS SSO 服务用于解决同一公司不同业务应用之间的身份认证问题，只需要登录一次，即可访问所有添加的应用。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/weibo.png">
+          
+        </a>
+      
+    
+  </div>
+</div>
+
+
+
+        
+      
+    </div>
+  </section>
+
+
+        
+        
+          <div class="prev-next">
+            
+              <a class='prev' href='/mysql8-0-22-rpm%E5%AE%89%E8%A3%85.html'>
+                <p class='title'><i class="fas fa-chevron-left" aria-hidden="true"></i>mysql8.0.22-rpm安装</p>
+                <p class='content'>前提某个远古系统，随着业务量的增长，服务的响应速度过慢，导致用户体验较差。就数据库层面而言，为了寻求优化方案，听闻mysql8对比系统依赖的mysql5.7快了不止一倍，所以本文就mysql的升...</p>
+              </a>
+            
+            
+              <a class='next' href='/%E8%AE%B0%E4%B8%80%E6%AC%A1%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88.html'>
+                <p class='title'>记一次内存溢出的解决方案<i class="fas fa-chevron-right" aria-hidden="true"></i></p>
+                <p class='content'>前提在前文netty ButeBuf使用中可以了解到JVM主要由堆、方法区、虚拟机栈、本地方法栈、程序计数器组成。由于在最近的项目中遇到了堆/堆外内存溢出(Java heap space/Dir...</p>
+              </a>
+            
+          </div>
+        
+      </section>
+    </article>
+  
+
+  
+    <!-- 显示推荐文章和评论 -->
+
+
+
+  <article class="post white-box comments shadow floatable">
+    <section class="article typo">
+      <p ct><i class='fas fa-comments'></i> 评论</p>
+      
+      
+      
+        <section id="comments">
+          <div id="lv-container" data-id="city" data-uid="MTAyMC80OTQ2OS8yNTk2MQ==">
+            <noscript><div><i class='fas fa-exclamation-triangle'>&nbsp;无法加载Livere评论系统，请确保您的网络能够正常访问。</div></noscript>
+          </div>
+        </section>
+      
+      
+      
+    </section>
+  </article>
+
+
+  
+
+
+
+
+<!-- 根据页面mathjax变量决定是否加载MathJax数学公式js -->
+
+
+
+  <script>
+    window.subData = {
+      title: '单点登录-无插件式SSO（cas标准）流程',
+      tools: true
+    }
+  </script>
+
+
+
+</div>
+<aside class='l_side'>
+  
+  
+
+  
+    
+    
+
+
+  <section class="widget toc-wrapper shadow floatable desktop mobile">
+    
+  <header>
+    
+      <i class="fas fa-list fa-fw" aria-hidden="true"></i><span class='name'>本文目录</span>
+    
+  </header>
+
+
+    <div class='content'>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#单点登录概述"><span class="toc-text">单点登录概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#插件式SSO（JWT）"><span class="toc-text">插件式SSO（JWT）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#无插件式SSO（Cas标准）"><span class="toc-text">无插件式SSO（Cas标准）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#cas原理与协议"><span class="toc-text">cas原理与协议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#cas接入验证"><span class="toc-text">cas接入验证</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#cas服务器端搭建"><span class="toc-text">cas服务器端搭建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#cas客户端验证"><span class="toc-text">cas客户端验证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#项目接入cas"><span class="toc-text">项目接入cas</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#ST验证的Serice-url不一致"><span class="toc-text">ST验证的Serice-url不一致</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#票据验证的超时处理"><span class="toc-text">票据验证的超时处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#无法获取到用户名"><span class="toc-text">无法获取到用户名</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#LAST-BUT-NOT-LEAST"><span class="toc-text">LAST BUT NOT LEAST</span></a></li></ol></li></ol></li></ol>
+    </div>
+  </section>
+
+
+  
+
+
+</aside>
+
+
+  
+  <footer class="clearfix white">
+    <br><br>
+    
+      
+        <div class="aplayer-container">
+          
+
+  
+    <meting-js
+      theme='#1BCDFC'
+      autoplay='false'
+      volume='0.7'
+      loop='all'
+      order='list'
+      fixed='false'
+      list-max-height='340px'
+      server='netease'
+      type='playlist'
+      id='4926244994'
+      list-folded='true'>
+    </meting-js>
+  
+
+
+        </div>
+      
+    
+      
+        <br>
+        <div class="social-wrapper">
+          
+            
+              <a href="/atom.xml"
+                class="social fas fa-rss flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="mailto:1579700874@qq.com"
+                class="social fas fa-envelope flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="https://github.com/silly-billy"
+                class="social fab fa-github flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+        </div>
+      
+    
+      
+        
+          <div><p>博客内容遵循 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener">署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</a></p>
+</div>
+        
+      
+    
+      
+        
+          <div><p>本站使用 <a href="https://volantis.js.org/" target="_blank" rel="noopener">Volantis</a> 作为主题 ， 总访问量为 <span id="busuanzi_value_site_uv"></span> 次</p>
+</div>
+        
+      
+    
+      
+        <div class='copyright'>
+        <p>[Copyright © 2019-2020 silly-billy]</p>
+
+        </div>
+      
+    
+  </footer>
+
+<script>setLoadingBarProgress(80);</script>
+
+
+      <script>setLoadingBarProgress(60);</script>
+    </div>
+    <a class="s-top fas fa-arrow-up fa-fw" href='javascript:void(0)'></a>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.min.js"></script>
+
+
+  <script>
+    
+    var SEARCH_SERVICE = "hexo" || "hexo";
+    var ROOT = "/" || "/";
+    if (!ROOT.endsWith('/')) ROOT += '/';
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/instant_page.js" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.js"></script>
+
+  <script type="text/javascript">
+    $(function() {
+      Waves.attach('.flat-btn', ['waves-button']);
+      Waves.attach('.float-btn', ['waves-button', 'waves-float']);
+      Waves.attach('.float-btn-light', ['waves-button', 'waves-float', 'waves-light']);
+      Waves.attach('.flat-box', ['waves-block']);
+      Waves.attach('.float-box', ['waves-block', 'waves-float']);
+      Waves.attach('.waves-image');
+      Waves.init();
+    });
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/busuanzi.pure.mini.js"></script>
+
+
+
+  
+  
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.backstretch.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var imgs=["https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud.jpg", "https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud-1.jpg"];
+        if ('true' == 'true') {
+          function shuffle(arr){
+            /*From countercurrent-time*/
+            var n = arr.length;
+            while(n--) {
+              var index = Math.floor(Math.random() * n);
+              var temp = arr[index];
+              arr[index] = arr[n];
+              arr[n] = temp;
+            }
+          }
+          shuffle(imgs);
+        }
+        if ('.cover') {
+          $('.cover').backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        } else {
+          $.backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        }
+      });
+    </script>
+  
+
+
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/APlayer.min.js" async></script>
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/Meting.min.js" async></script>
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+      if (typeof LivereTower === 'function') { return; }
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+      e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  </script>
+
+
+
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/app.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/search.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/comment_typing.js"></script>
+
+
+
+<!-- 复制 -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/clipboard.min.js"></script>
+<script>
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="fas fa-copy"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copyed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-clipboard-check');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPYED';
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-exclamation-triangle');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+<!-- fancybox -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.js"></script>
+<script>
+  let LAZY_LOAD_IMAGE = "";
+  $(".article-entry").find("fancybox").find("img").each(function () {
+      var element = document.createElement("a");
+      $(element).attr("data-fancybox", "gallery");
+      $(element).attr("href", $(this).attr("src"));
+      /* 图片采用懒加载处理时,
+       * 一般图片标签内会有个属性名来存放图片的真实地址，比如 data-original,
+       * 那么此处将原本的属性名src替换为对应属性名data-original,
+       * 修改如下
+       */
+       if (LAZY_LOAD_IMAGE) {
+         $(element).attr("href", $(this).attr("data-original"));
+       }
+      $(this).wrap(element);
+  });
+</script>
+
+
+
+
+
+
+<script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562' crossorigin='anonymous'></script>
+<ins class='adsbygoogle' style='display:block' data-ad-client='ca-pub-7706779639350562' data-ad-slot='8192807482' data-ad-format='auto' data-full-width-responsive='true'></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+
+  <script>setLoadingBarProgress(100);</script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html>
+<head hexo-theme='https://volantis.js.org/#blog'>
+  <meta charset="utf-8">
+  <!-- SEO相关 -->
+  
+    
+  
+  <!-- 渲染优化 -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- 页面元数据 -->
+  
+    <title>nginx本地缓存 - 微笑流浪</title>
+  
+    <meta name="keywords" content="nginx,cache">
+  
+  
+    <meta name="description" content="前提通常nginx作为一个很强大的高性能Web和反向代理服务，在没有F5的情况下用来作为负载均衡器都是一种很不错的选择。而实际的使用中我发现nginx的作用远不止于此，本文在此主要讲述nginx作为缓存服务器的使用和实现。nginx支持类似Squid的缓存功能，分为两种。一种是永久缓存，即指定一个文件将用户访问的...">
+  
+
+  <!-- feed -->
+  
+
+  <!-- import meta -->
+  
+
+  <!-- link -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css">
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10/dist/APlayer.min.css">
+  
+
+  <!-- import link -->
+  
+
+  <link rel="shortcut icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/favicon.ico">
+
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/style.css">
+
+  
+
+  <script>
+    function setLoadingBarProgress(num) {
+      document.getElementById('loading-bar').style.width=num+"%";
+    }
+  </script>
+
+  
+  
+  
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562" crossorigin="anonymous"></script>
+  
+</head>
+
+<body>
+  
+  <div id="loading-bar-wrapper">
+  <div id="loading-bar"></div>
+</div>
+<header class="l_header shadow floatable">
+
+  <div class='wrapper'>
+    <div class='nav-sub container--flex'>
+      <a class="logo flat-box"></a>
+      <ul class='switcher h-list'>
+        <li><a class="s-comment flat-btn fas fa-comments fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+          <li><a class="s-toc flat-btn fas fa-list fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+      </ul>
+    </div>
+		<div class="nav-main container container--flex">
+      
+        
+        <a class="logo flat-box" target="_self" href='/'>
+          
+          
+          
+          
+            SILLY-BILLY'S <b><sup style='color:#3AA757'>blog</sup></b>
+          
+        </a>
+      
+
+			<div class='menu navigation'>
+				<ul class='h-list'>
+          
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/
+                  
+                  
+                  
+                    id="home"
+                  >
+                  
+                    <i class='fas fa-home fa-fw fa-fw'></i>
+                  
+                  主页
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/categories/
+                  
+                  
+                  
+                    id="categories"
+                  >
+                  
+                    <i class='fas fa-folder-open fa-fw'></i>
+                  
+                  分类
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/tags/
+                  
+                  
+                  
+                    id="tags"
+                  >
+                  
+                    <i class='fas fa-tags fa-fw'></i>
+                  
+                  标签
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/archives/
+                  
+                  
+                  
+                    id="archives"
+                  >
+                  
+                    <i class='fas fa-archive fa-fw'></i>
+                  
+                  归档
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/404.html
+                  
+                  
+                  
+                    id="404html"
+                  >
+                  
+                    <i class='fas fa-link fa-fw'></i>
+                  
+                  友链
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/about/
+                  
+                  
+                  
+                    id="about"
+                  >
+                  
+                    <i class='fas fa-info-circle fa-fw'></i>
+                  
+                  关于
+                </a>
+                
+              </li>
+            
+          
+          
+				</ul>
+			</div>
+
+      
+        <div class="m_search">
+          <form name="searchform" class="form u-search-form">
+            <i class="icon fas fa-search fa-fw"></i>
+            <input type="text" class="input u-search-input" placeholder="搜索" />
+          </form>
+        </div>
+      
+
+			<ul class='switcher h-list'>
+				
+					<li><a class="s-search flat-btn fas fa-search fa-fw" target="_self" href='javascript:void(0)'></a></li>
+				
+				<li><a class="s-menu flat-btn fas fa-bars fa-fw" target="_self" href='javascript:void(0)'></a></li>
+			</ul>
+		</div>
+	</div>
+</header>
+<ul class="menu-phone navigation white-box">
+  
+  
+    <li>
+      <a class="flat-box" href=/
+        
+        
+        
+          id="home"
+        >
+        
+          <i class='fas fa-rss fa-fw'></i>
+        
+        博客
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/categories/
+        
+        
+        
+          id="categories"
+        >
+        
+          <i class='fas fa-folder-open fa-fw'></i>
+        
+        分类
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/tags/
+        
+        
+        
+          id="tags"
+        >
+        
+          <i class='fas fa-tags fa-fw'></i>
+        
+        标签
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/archives/
+        
+        
+        
+          id="archives"
+        >
+        
+          <i class='fas fa-archive fa-fw'></i>
+        
+        归档
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/404.html
+        
+        
+        
+          id="404html"
+        >
+        
+          <i class='fas fa-link fa-fw'></i>
+        
+        友链
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/about/
+        
+        
+        
+          id="about"
+        >
+        
+          <i class='fas fa-info-circle fa-fw'></i>
+        
+        关于
+      </a>
+    </li>
+  
+</ul>
+<script>setLoadingBarProgress(40);</script>
+
+
+
+  <div class="l_body nocover">
+    <div class='body-wrapper'>
+      
+
+<div class='l_main'>
+  
+
+  
+    <article id="post" class="post white-box shadow floatable article-type-post" itemscope itemprop="blogPost">
+      
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  
+    <h1 class="title">
+      <a href="/nginx%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98.html">
+        nginx本地缓存
+      </a>
+    </h1>
+  
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+  
+  <div class='new-meta-item category'>
+    <a href='/categories/nginx/' rel="nofollow">
+      <i class="fas fa-folder-open" aria-hidden="true"></i>
+      <p>nginx</p>
+    </a>
+  </div>
+
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2020年4月14日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+      <section class="article typo">
+        <div class="article-entry" itemprop="articleBody">
+          
+          <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>通常nginx作为一个很强大的高性能Web和反向代理服务，在没有F5的情况下用来作为负载均衡器都是一种很不错的选择。而实际的使用中我发现nginx的作用远不止于此，本文在此主要讲述nginx作为缓存服务器的使用和实现。<br><br>nginx支持类似Squid的缓存功能，分为两种。一种是永久缓存，即指定一个文件将用户访问的数据缓存在该文件中，并且不会过期；另一种是临时缓存，顾名思义可以指定过期策略、缓存空间大小，存在第三方插件支持(purge模块)，用来清除某个路径缓存。比较坑的是，只有付费版的nginx plus支持路径匹配删除,例如：https//sillybilly-share.top/* 删除缓存key值匹配https//sillybilly-share.top的所有缓存内容，第三方插件只能全路径匹配，网上也看到一些用lua脚本写的删除策略，但都是遍历删除，当缓存文件很大时清除缓存的效率就会低下。</p>
+<a id="more"></a>
+
+<h2 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h2><p>在配置永久缓存和临时缓存之前，需要将nginx编译安装完成。这里在linux环境下操作（window下编译第三方模块太麻烦了）。<br>如果linux没有安装编译工具和库文件的需要执行：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum -y install make zlib zlib-devel gcc-c++ libtool  openssl openssl-devel</span><br></pre></td></tr></table></figure>
+<p>为了让nginx支持rewrite功能需要下载pcre包，官网地址：<a href="http://downloads.sourceforge.net/project/pcre/pcre" target="_blank" rel="noopener">pcre</a><br>进入解压后的pcre目录下,编译后安装：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[root@user pcre-8.35]<span class="comment"># ./configure</span></span><br><span class="line">[root@user pcre-8.35]<span class="comment"># make &amp;&amp; make install</span></span><br></pre></td></tr></table></figure>
+<p>然后下载nginx源码包以及第三方purge模块，nginx下载地址：<a href="http://nginx.org/download" target="_blank" rel="noopener">nginx</a>，purge模块：<a href="http://labs.frickle.com/nginx_ngx_cache_purge" target="_blank" rel="noopener">purge</a><br>执行命令编译安装，同时加入第三方purge模块</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./configure --prefix=/usr/<span class="built_in">local</span>/webserver/nginx --with-http_stub_status_module --with-http_ssl_module --with-pcre=/usr/<span class="built_in">local</span>/src/pcre-8.45 （pcre安装地址） --add-module=/usr/ngx_cache_purge-2.3 (purge模块解压地址)</span><br><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure>
+<p>此时进入nginx目录，执行./sbin/nginx -v，出现版本号就没问题了。</p>
+<h2 id="nginx配置"><a href="#nginx配置" class="headerlink" title="nginx配置"></a>nginx配置</h2><h3 id="临时缓存"><a href="#临时缓存" class="headerlink" title="临时缓存"></a>临时缓存</h3><p>http层级定义临时缓存保存策略:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">proxy_temp_path &#x2F;apps&#x2F;nginx&#x2F;short-temp;</span><br><span class="line">proxy_cache_path &#x2F;apps&#x2F;nginx&#x2F;short-cache levels&#x3D;1:2 keys_zone&#x3D;nginx-cache:100m inactive&#x3D;7d max_size&#x3D;10g;</span><br></pre></td></tr></table></figure>
+<p>说明：<br>proxy_temp_path：缓存临时文件，该文件需和proxy_cache_path在统一分区<br>proxy_cache_path：定义缓存文件路径为/apps/nginx/short-cache，key由两层目录结构（第一层是key值md5最后一位字符，第二层是key值md5倒数第2、3位字符），缓存名称为nginx-cache，缓存空间大小为100m,内容7天未被访问则清除该缓存，最大硬盘缓存空间为10g。</p>
+<p>定义location正则匹配:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">location ~* ~* \.(jpeg|jpg|png|css|js)$ &#123;</span><br><span class="line">            add_header Cache-Control no-cache;</span><br><span class="line">	    proxy_pass  http:&#x2F;&#x2F;ip:port;</span><br><span class="line">	    proxy_cache nginx-cache;</span><br><span class="line">	    proxy_cache_key $host$uri$is_args$args;</span><br><span class="line">	    proxy_cache_valid 200 304 1d;</span><br><span class="line">	    proxy_set_header Host $host:$server_port;</span><br><span class="line">	    proxy_set_header X-Real-IP $remote_addr;</span><br><span class="line">	    proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">	    proxy_set_header Range $http_range;</span><br><span class="line">	    add_header  Nginx-Cache &quot;$upstream_cache_status&quot;;</span><br><span class="line">	    proxy_next_upstream http_500 http_502 http_503 error timeout invalid_header;</span><br><span class="line">	    expires 1d;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>说明：<br>将后缀为.jpg/.png等请求路由到某个服务。<br>proxy_cache:定义配置的缓存名<br>proxy_cache_key：以域名、URL、请求参数合成缓存key值经过md5hash到二级缓存目录中去<br>proxy_cache_valid：可以给不同http状态码设置不同的缓存时间<br>…<br>proxy_next_upstream:对于服务器返回的502，504和执行超时等错误，将请求转发给upstream中的另一台服务器，实现故障转移</p>
+<h4 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h4><p>对于http1.0遗留的Pragma:no-cache响应头：<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/nginx/program.jpg" alt="result"><br>nginx会略过该请求不做任何处理(请求不会被缓存)，所以需要添加：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">proxy_hide_header Pragma;</span><br><span class="line">proxy_ignore_headers Expires;</span><br><span class="line">proxy_ignore_headers Cache-Control;</span><br></pre></td></tr></table></figure>
+
+<p>定义缓存清除配置:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">location ~ &#x2F;purge(&#x2F;.*) &#123;</span><br><span class="line">            allow              127.0.0.1;</span><br><span class="line">            deny               all;</span><br><span class="line">            proxy_cache_purge  nginx-cache $host$1$is_args$args;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<p>说明：<br>purge的调用也十分简单，只需在原请求路径前加上purge即可，例如：<a href="https://sillybilly-share.top/1.html">https://sillybilly-share.top/1.html</a> 经过缓存后，调用 <a href="https://sillybilly-share.top/purge/1.html">https://sillybilly-share.top/purge/1.html</a> 即可</p>
+<h3 id="永久缓存"><a href="#永久缓存" class="headerlink" title="永久缓存"></a>永久缓存</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"> </span><br><span class="line">location ~* \.(html)$ &#123;</span><br><span class="line">	   if ($request_uri ~ \.($is_args$args)$ )&#123;</span><br><span class="line">            proxy_pass http:&#x2F;&#x2F;ip:port;</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line">        if (!-e $request_filename) &#123;</span><br><span class="line">            proxy_pass http:&#x2F;&#x2F;ip:port;</span><br><span class="line">            break;</span><br><span class="line">        &#125;</span><br><span class="line">        root &#x2F;apps&#x2F;nginx&#x2F;long-cache;</span><br><span class="line">        autoindex on;</span><br><span class="line">        proxy_store on;</span><br><span class="line">        proxy_store_access user:rw group:rw all:r;</span><br><span class="line">        proxy_temp_path &#x2F;apps&#x2F;nginx&#x2F;long-temp;</span><br><span class="line">        proxy_set_header x-real-ip $remote_addr;</span><br><span class="line">        proxy_set_header x-forwarded-for $proxy_add_x_forwarded_for;                                    </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>说明：<br>这样就指定了一个文件目录为/apps/nginx/long-cache的地址，用来缓存所有为.html结尾的请求资源。<br>$request_uri 如果携带参数(表明为非静态资源)，不访问本地缓存，从后端服务器读取资源；<br>!-e $request_filename，如果为ture,则本地缓存没有该文件，走服务器访问资源。</p>
+
+          
+            <br>
+            
+  
+    
+    
+
+<section class="widget copyright  desktop mobile">
+  <div class='content'>
+    
+      <blockquote>
+        
+          
+            <p>博客内容遵循 署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</p>
+
+          
+        
+          
+            <p>本文永久链接是：<a href=https://sillybilly-share.top/nginx%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98.html>https://sillybilly-share.top/nginx%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98.html</a></p>
+          
+        
+      </blockquote>
+    
+  </div>
+</section>
+
+  
+
+  
+    
+    
+
+<section class="widget qrcode  desktop mobile">
+  
+
+  <div class='content article-entry'>
+    
+  </div>
+</section>
+
+  
+
+
+          
+        </div>
+        
+          
+
+
+  <section class='meta' id="footer-meta">
+    <div class='new-meta-box'>
+      
+        
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2022-11-24T09:35:09+08:00">
+  <a class='notlink'>
+    <i class="fas fa-save" aria-hidden="true"></i>
+    <p>更新于：2022年11月24日</p>
+  </a>
+</div>
+
+        
+      
+        
+          
+  
+  <div class="new-meta-item meta-tags"><a class="tag" href="/tags/nginx/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>nginx</p></a></div> <div class="new-meta-item meta-tags"><a class="tag" href="/tags/cache/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>cache</p></a></div>
+
+
+        
+      
+        
+          
+
+        
+      
+        
+          
+  <div class="new-meta-item share -mob-share-list">
+  <div class="-mob-share-list share-body">
+    
+      
+        <a class="-mob-share-qq" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://connect.qq.com/widget/shareqq/index.html?url=https://sillybilly-share.top/nginx%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98.html&title=nginx本地缓存 - 微笑流浪&summary=前提通常nginx作为一个很强大的高性能Web和反向代理服务，在没有F5的情况下用来作为负载均衡器都是一种很不错的选择。而实际的使用中我发现nginx的作用远不止于此，本文在此主要讲述nginx作为缓存服务器的使用和实现。nginx支持类似Squid的缓存功能，分为两种。一种是永久缓存，即指定一个文件将用户访问的数据缓存在该文件中，并且不会过期；另一种是临时缓存，顾名思义可以指定过期策略、缓存空间大小，存在第三方插件支持(purge模块)，用来清除某个路径缓存。比较坑的是，只有付费版的nginx plus支持路径匹配删除,例如：https//sillybilly-share.top/* 删除缓存key值匹配https//sillybilly-share.top的所有缓存内容，第三方插件只能全路径匹配，网上也看到一些用lua脚本写的删除策略，但都是遍历删除，当缓存文件很大时清除缓存的效率就会低下。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qq.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-qzone" title="" rel="external nofollow noopener noreferrer"
+          
+          href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://sillybilly-share.top/nginx%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98.html&title=nginx本地缓存 - 微笑流浪&summary=前提通常nginx作为一个很强大的高性能Web和反向代理服务，在没有F5的情况下用来作为负载均衡器都是一种很不错的选择。而实际的使用中我发现nginx的作用远不止于此，本文在此主要讲述nginx作为缓存服务器的使用和实现。nginx支持类似Squid的缓存功能，分为两种。一种是永久缓存，即指定一个文件将用户访问的数据缓存在该文件中，并且不会过期；另一种是临时缓存，顾名思义可以指定过期策略、缓存空间大小，存在第三方插件支持(purge模块)，用来清除某个路径缓存。比较坑的是，只有付费版的nginx plus支持路径匹配删除,例如：https//sillybilly-share.top/* 删除缓存key值匹配https//sillybilly-share.top的所有缓存内容，第三方插件只能全路径匹配，网上也看到一些用lua脚本写的删除策略，但都是遍历删除，当缓存文件很大时清除缓存的效率就会低下。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qzone.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-weibo" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://service.weibo.com/share/share.php?url=https://sillybilly-share.top/nginx%E6%9C%AC%E5%9C%B0%E7%BC%93%E5%AD%98.html&title=nginx本地缓存 - 微笑流浪&summary=前提通常nginx作为一个很强大的高性能Web和反向代理服务，在没有F5的情况下用来作为负载均衡器都是一种很不错的选择。而实际的使用中我发现nginx的作用远不止于此，本文在此主要讲述nginx作为缓存服务器的使用和实现。nginx支持类似Squid的缓存功能，分为两种。一种是永久缓存，即指定一个文件将用户访问的数据缓存在该文件中，并且不会过期；另一种是临时缓存，顾名思义可以指定过期策略、缓存空间大小，存在第三方插件支持(purge模块)，用来清除某个路径缓存。比较坑的是，只有付费版的nginx plus支持路径匹配删除,例如：https//sillybilly-share.top/* 删除缓存key值匹配https//sillybilly-share.top的所有缓存内容，第三方插件只能全路径匹配，网上也看到一些用lua脚本写的删除策略，但都是遍历删除，当缓存文件很大时清除缓存的效率就会低下。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/weibo.png">
+          
+        </a>
+      
+    
+  </div>
+</div>
+
+
+
+        
+      
+    </div>
+  </section>
+
+
+        
+        
+          <div class="prev-next">
+            
+              <a class='prev' href='/elasticsearch-high-level-client.html'>
+                <p class='title'><i class="fas fa-chevron-left" aria-hidden="true"></i>elasticsearch-high-level-client</p>
+                <p class='content'>前提项目中需要对新闻发布内容做全文检索，基于原本的mysql数据库已经无法满足现有的需求了，所以需要用到es+ik分词器作为技术栈，经过调研发现适用于es的java客户端主流的有三种：Java ...</p>
+              </a>
+            
+            
+              <a class='next' href='/%E5%9F%BA%E4%BA%8Eamazonaws-s3%E7%9A%84%E5%88%86%E7%89%87%E4%B8%8A%E4%BC%A0-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%9E%E7%8E%B0.html'>
+                <p class='title'>基于amazonaws s3的分片上传(前后端实现)<i class="fas fa-chevron-right" aria-hidden="true"></i></p>
+                <p class='content'>前提s3对象存储在单个操作上文件上传的最大值为5个G，所以对于大文件的上传肯定需要使用分片功能。使用分段上传可提供以下优势：1、提高吞吐量 – 可以并行上传分段以提高吞吐量。2、从任何网络问题中...</p>
+              </a>
+            
+          </div>
+        
+      </section>
+    </article>
+  
+
+  
+    <!-- 显示推荐文章和评论 -->
+
+
+
+  <article class="post white-box comments shadow floatable">
+    <section class="article typo">
+      <p ct><i class='fas fa-comments'></i> 评论</p>
+      
+      
+      
+        <section id="comments">
+          <div id="lv-container" data-id="city" data-uid="MTAyMC80OTQ2OS8yNTk2MQ==">
+            <noscript><div><i class='fas fa-exclamation-triangle'>&nbsp;无法加载Livere评论系统，请确保您的网络能够正常访问。</div></noscript>
+          </div>
+        </section>
+      
+      
+      
+    </section>
+  </article>
+
+
+  
+
+
+
+
+<!-- 根据页面mathjax变量决定是否加载MathJax数学公式js -->
+
+
+
+  <script>
+    window.subData = {
+      title: 'nginx本地缓存',
+      tools: true
+    }
+  </script>
+
+
+
+</div>
+<aside class='l_side'>
+  
+  
+
+  
+    
+    
+
+
+  <section class="widget toc-wrapper shadow floatable desktop mobile">
+    
+  <header>
+    
+      <i class="fas fa-list fa-fw" aria-hidden="true"></i><span class='name'>本文目录</span>
+    
+  </header>
+
+
+    <div class='content'>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#准备"><span class="toc-text">准备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#nginx配置"><span class="toc-text">nginx配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#临时缓存"><span class="toc-text">临时缓存</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#补充"><span class="toc-text">补充</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#永久缓存"><span class="toc-text">永久缓存</span></a></li></ol></li></ol>
+    </div>
+  </section>
+
+
+  
+
+
+</aside>
+
+
+  
+  <footer class="clearfix white">
+    <br><br>
+    
+      
+        <div class="aplayer-container">
+          
+
+  
+    <meting-js
+      theme='#1BCDFC'
+      autoplay='false'
+      volume='0.7'
+      loop='all'
+      order='list'
+      fixed='false'
+      list-max-height='340px'
+      server='netease'
+      type='playlist'
+      id='4926244994'
+      list-folded='true'>
+    </meting-js>
+  
+
+
+        </div>
+      
+    
+      
+        <br>
+        <div class="social-wrapper">
+          
+            
+              <a href="/atom.xml"
+                class="social fas fa-rss flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="mailto:1579700874@qq.com"
+                class="social fas fa-envelope flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="https://github.com/silly-billy"
+                class="social fab fa-github flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+        </div>
+      
+    
+      
+        
+          <div><p>博客内容遵循 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener">署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</a></p>
+</div>
+        
+      
+    
+      
+        
+          <div><p>本站使用 <a href="https://volantis.js.org/" target="_blank" rel="noopener">Volantis</a> 作为主题 ， 总访问量为 <span id="busuanzi_value_site_uv"></span> 次</p>
+</div>
+        
+      
+    
+      
+        <div class='copyright'>
+        <p>[Copyright © 2019-2020 silly-billy]</p>
+
+        </div>
+      
+    
+  </footer>
+
+<script>setLoadingBarProgress(80);</script>
+
+
+      <script>setLoadingBarProgress(60);</script>
+    </div>
+    <a class="s-top fas fa-arrow-up fa-fw" href='javascript:void(0)'></a>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.min.js"></script>
+
+
+  <script>
+    
+    var SEARCH_SERVICE = "hexo" || "hexo";
+    var ROOT = "/" || "/";
+    if (!ROOT.endsWith('/')) ROOT += '/';
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/instant_page.js" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.js"></script>
+
+  <script type="text/javascript">
+    $(function() {
+      Waves.attach('.flat-btn', ['waves-button']);
+      Waves.attach('.float-btn', ['waves-button', 'waves-float']);
+      Waves.attach('.float-btn-light', ['waves-button', 'waves-float', 'waves-light']);
+      Waves.attach('.flat-box', ['waves-block']);
+      Waves.attach('.float-box', ['waves-block', 'waves-float']);
+      Waves.attach('.waves-image');
+      Waves.init();
+    });
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/busuanzi.pure.mini.js"></script>
+
+
+
+  
+  
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.backstretch.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var imgs=["https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud.jpg", "https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud-1.jpg"];
+        if ('true' == 'true') {
+          function shuffle(arr){
+            /*From countercurrent-time*/
+            var n = arr.length;
+            while(n--) {
+              var index = Math.floor(Math.random() * n);
+              var temp = arr[index];
+              arr[index] = arr[n];
+              arr[n] = temp;
+            }
+          }
+          shuffle(imgs);
+        }
+        if ('.cover') {
+          $('.cover').backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        } else {
+          $.backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        }
+      });
+    </script>
+  
+
+
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/APlayer.min.js" async></script>
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/Meting.min.js" async></script>
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+      if (typeof LivereTower === 'function') { return; }
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+      e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  </script>
+
+
+
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/app.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/search.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/comment_typing.js"></script>
+
+
+
+<!-- 复制 -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/clipboard.min.js"></script>
+<script>
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="fas fa-copy"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copyed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-clipboard-check');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPYED';
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-exclamation-triangle');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+<!-- fancybox -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.js"></script>
+<script>
+  let LAZY_LOAD_IMAGE = "";
+  $(".article-entry").find("fancybox").find("img").each(function () {
+      var element = document.createElement("a");
+      $(element).attr("data-fancybox", "gallery");
+      $(element).attr("href", $(this).attr("src"));
+      /* 图片采用懒加载处理时,
+       * 一般图片标签内会有个属性名来存放图片的真实地址，比如 data-original,
+       * 那么此处将原本的属性名src替换为对应属性名data-original,
+       * 修改如下
+       */
+       if (LAZY_LOAD_IMAGE) {
+         $(element).attr("href", $(this).attr("data-original"));
+       }
+      $(this).wrap(element);
+  });
+</script>
+
+
+
+
+
+
+<script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562' crossorigin='anonymous'></script>
+<ins class='adsbygoogle' style='display:block' data-ad-client='ca-pub-7706779639350562' data-ad-slot='8192807482' data-ad-format='auto' data-full-width-responsive='true'></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+
+  <script>setLoadingBarProgress(100);</script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

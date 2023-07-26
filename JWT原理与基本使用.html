@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html>
+<head hexo-theme='https://volantis.js.org/#blog'>
+  <meta charset="utf-8">
+  <!-- SEO相关 -->
+  
+    
+  
+  <!-- 渲染优化 -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <!-- 页面元数据 -->
+  
+    <title>JWT原理与基本使用 - 微笑流浪</title>
+  
+    <meta name="keywords" content="jwt">
+  
+  
+    <meta name="description" content="前提写这篇文章的原因是因为前段时间接手了一个项目，它并没有使用公司的统一的单点登录平台sso,而是通过调用uim接口来验证用户信息，并以JWT的实现方式生成一段token存到客户端的localStorage中，登录后的客户端每次携带该token去请求后端，经由后端服务器自定义的filter解析校验token完成登...">
+  
+
+  <!-- feed -->
+  
+
+  <!-- import meta -->
+  
+
+  <!-- link -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css">
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.css">
+
+  
+
+  
+
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10/dist/APlayer.min.css">
+  
+
+  <!-- import link -->
+  
+
+  <link rel="shortcut icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/favicon.ico">
+
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/style.css">
+
+  
+
+  <script>
+    function setLoadingBarProgress(num) {
+      document.getElementById('loading-bar').style.width=num+"%";
+    }
+  </script>
+
+  
+  
+  
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562" crossorigin="anonymous"></script>
+  
+</head>
+
+<body>
+  
+  <div id="loading-bar-wrapper">
+  <div id="loading-bar"></div>
+</div>
+<header class="l_header shadow floatable">
+
+  <div class='wrapper'>
+    <div class='nav-sub container--flex'>
+      <a class="logo flat-box"></a>
+      <ul class='switcher h-list'>
+        <li><a class="s-comment flat-btn fas fa-comments fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+          <li><a class="s-toc flat-btn fas fa-list fa-fw" target="_self" href='javascript:void(0)'></a></li>
+        
+      </ul>
+    </div>
+		<div class="nav-main container container--flex">
+      
+        
+        <a class="logo flat-box" target="_self" href='/'>
+          
+          
+          
+          
+            SILLY-BILLY'S <b><sup style='color:#3AA757'>blog</sup></b>
+          
+        </a>
+      
+
+			<div class='menu navigation'>
+				<ul class='h-list'>
+          
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/
+                  
+                  
+                  
+                    id="home"
+                  >
+                  
+                    <i class='fas fa-home fa-fw fa-fw'></i>
+                  
+                  主页
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/categories/
+                  
+                  
+                  
+                    id="categories"
+                  >
+                  
+                    <i class='fas fa-folder-open fa-fw'></i>
+                  
+                  分类
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/tags/
+                  
+                  
+                  
+                    id="tags"
+                  >
+                  
+                    <i class='fas fa-tags fa-fw'></i>
+                  
+                  标签
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/archives/
+                  
+                  
+                  
+                    id="archives"
+                  >
+                  
+                    <i class='fas fa-archive fa-fw'></i>
+                  
+                  归档
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/404.html
+                  
+                  
+                  
+                    id="404html"
+                  >
+                  
+                    <i class='fas fa-link fa-fw'></i>
+                  
+                  友链
+                </a>
+                
+              </li>
+            
+          
+          
+            
+            
+              <li>
+                <a class="flat-box" href=/about/
+                  
+                  
+                  
+                    id="about"
+                  >
+                  
+                    <i class='fas fa-info-circle fa-fw'></i>
+                  
+                  关于
+                </a>
+                
+              </li>
+            
+          
+          
+				</ul>
+			</div>
+
+      
+        <div class="m_search">
+          <form name="searchform" class="form u-search-form">
+            <i class="icon fas fa-search fa-fw"></i>
+            <input type="text" class="input u-search-input" placeholder="搜索" />
+          </form>
+        </div>
+      
+
+			<ul class='switcher h-list'>
+				
+					<li><a class="s-search flat-btn fas fa-search fa-fw" target="_self" href='javascript:void(0)'></a></li>
+				
+				<li><a class="s-menu flat-btn fas fa-bars fa-fw" target="_self" href='javascript:void(0)'></a></li>
+			</ul>
+		</div>
+	</div>
+</header>
+<ul class="menu-phone navigation white-box">
+  
+  
+    <li>
+      <a class="flat-box" href=/
+        
+        
+        
+          id="home"
+        >
+        
+          <i class='fas fa-rss fa-fw'></i>
+        
+        博客
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/categories/
+        
+        
+        
+          id="categories"
+        >
+        
+          <i class='fas fa-folder-open fa-fw'></i>
+        
+        分类
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/tags/
+        
+        
+        
+          id="tags"
+        >
+        
+          <i class='fas fa-tags fa-fw'></i>
+        
+        标签
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/archives/
+        
+        
+        
+          id="archives"
+        >
+        
+          <i class='fas fa-archive fa-fw'></i>
+        
+        归档
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/404.html
+        
+        
+        
+          id="404html"
+        >
+        
+          <i class='fas fa-link fa-fw'></i>
+        
+        友链
+      </a>
+    </li>
+  
+    <li>
+      <a class="flat-box" href=/about/
+        
+        
+        
+          id="about"
+        >
+        
+          <i class='fas fa-info-circle fa-fw'></i>
+        
+        关于
+      </a>
+    </li>
+  
+</ul>
+<script>setLoadingBarProgress(40);</script>
+
+
+
+  <div class="l_body nocover">
+    <div class='body-wrapper'>
+      
+
+<div class='l_main'>
+  
+
+  
+    <article id="post" class="post white-box shadow floatable article-type-post" itemscope itemprop="blogPost">
+      
+
+
+  <section class='meta'>
+    
+    
+    <div class="meta" id="header-meta">
+      
+        
+  
+    <h1 class="title">
+      <a href="/JWT%E5%8E%9F%E7%90%86%E4%B8%8E%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8.html">
+        JWT原理与基本使用
+      </a>
+    </h1>
+  
+
+
+      
+      <div class='new-meta-box'>
+        
+          
+        
+          
+            
+<div class='new-meta-item author'>
+  <a href="" rel="nofollow">
+    <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/avatar.jpg">
+    <p>silly-billy</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+          
+            <div class="new-meta-item date">
+  <a class='notlink'>
+    <i class="fas fa-edit" aria-hidden="true"></i>
+    <p>发布于：2022年3月27日</p>
+  </a>
+</div>
+
+          
+        
+          
+            
+
+          
+        
+      </div>
+      
+        <hr>
+      
+    </div>
+  </section>
+
+
+      <section class="article typo">
+        <div class="article-entry" itemprop="articleBody">
+          
+          <h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>写这篇文章的原因是因为前段时间接手了一个项目，它并没有使用公司的统一的单点登录平台<code>sso</code>,而是通过调用<code>uim</code>接口来验证用户信息，并以<code>JWT</code>的实现方式生成一段token存到客户端的<code>localStorage</code>中，登录后的客户端每次携带该<code>token</code>去请求后端，经由后端服务器自定义的<code>filter</code>解析校验<code>token</code>完成登录。</p>
+<p>究其原因，可能目前<code>sso</code>的实现方案符合<code>cas</code>标准，需要利用浏览器的重定向功能，而<code>app</code>全是接口交互，所以在系统需要兼容<code>web</code>端与移动端的情况下，采用了<code>JWT</code>来实现登录认证流程。之前我对于<code>JWT</code>是一种半了解的状态，于是乎趁此机会浅学了一波<code>JWT</code>的基本使用。</p>
+<a id="more"></a>
+
+<h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p><code>JSON Web Token</code>简称<code>JWT</code>，在<code><a href="https://jwt.io/" target="_blank" rel="noopener">https://jwt.io/</a></code>中，有一段对于<code>JWT</code>的描述，大体意思为<code>JWT</code>拥有一套开放的行业标准(<code>RFC 7519</code>)，里面详细介绍了<code>JWT</code>的基本概念，<code>Claims</code>的含义、布局和算法实现等。<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/jwt/4.png" alt="result"><br><code>JWT</code>是一种紧凑的<code>Claims</code>声明格式，适用于空间受限的网络环境中传输，例如 <code>HTTP</code>授权标头和 <code>URI</code> 查询参数。<code>JWT</code> 对<code>Claims</code>编码并转化为<code> JSON [RFC7159]</code> 对象传输，它被用作<code>JWS[RFC 7515]</code>的有效载荷或者<code>JWE[RFC 7516]</code>（加密后）的字符串。<code>JWT</code> 使用 <code>JWS/JWE Compact</code> 序列化，使用<code>Message Authentication Code (MAC)</code>and/or 加密手段对claims签名并提供完整性保护。</p>
+<p>以上概念摘自规范性文件<a href="https://datatracker.ietf.org/doc/html/rfc7519" target="_blank" rel="noopener">RFC7519</a>，对于文中提到了<code>JWS</code>、<code>JWE</code>简单描述如下：</p>
+<p><code>JWS</code>（祥见<a href="https://www.rfc-editor.org/info/rfc7515" target="_blank" rel="noopener">RFC 7515</a>）：<code>JSON Web Signature</code>，使用基于<code>JSON</code>的数据结构的数字签名或消息身份验证码（MAC），对传输的Claims提供了完整性保护（<code>Claims</code>内容不被篡改，但会暴露明文）。</p>
+<p><code>JWE</code>（详见<a href="https://www.rfc-editor.org/info/rfc7516" target="_blank" rel="noopener">RFC 7516</a>）：<code>JSON Web Encryption</code>，使用基于<code> JSON</code> 的数据结构的加密内容、这使得<code>Claims</code>在传输过程中被破解的难度提高。</p>
+<p>目前已知的主流框架大都未实现<code>JWE</code>,例如<code>JJWT、auth0</code>，故下文主要以<code>JWS</code>实现方式展开讨论。</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Currently Unsupported Features(当前不支持的功能)</span><br><span class="line">Non-compact serialization and parsing.</span><br><span class="line">JWE (Encryption for JWT)</span><br></pre></td></tr></table></figure>
+
+<h2 id="JWT布局"><a href="#JWT布局" class="headerlink" title="JWT布局"></a>JWT布局</h2><p><code>JWS</code>的紧凑布局定义为:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">BASE64URL(UTF8(JWS Protected Header)) || '.' ||</span><br><span class="line">BASE64URL(JWS Payload) || '.' ||</span><br><span class="line">BASE64URL(JWS Signature)</span><br></pre></td></tr></table></figure>
+
+<p>可以看出<code>JWT</code>由三个部分组成，并且各个部分分别使用Base64url编码，然后以句点连接，他的表现形式如下:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">const token = base64urlEncoding(header) + '.' + base64urlEncoding(payload) + '.' + base64urlEncoding(signature)</span><br></pre></td></tr></table></figure>
+
+<p>此外还有非紧凑布局，将<code>header</code>、<code>payload</code>、<code>signature</code>组合成一个json形式展示，此次不展开讨论（有关紧凑布局、非紧凑布局的概念详见<a href="https://datatracker.ietf.org/doc/html/rfc7515#section-3.2" target="_blank" rel="noopener"><code>JWS JSON</code>序列化概述</a>）</p>
+<h3 id="header"><a href="#header" class="headerlink" title="header"></a>header</h3><p><code>JWT</code>中的header又称<code>Jose header</code>，包含描述加密操作和对象签名的参数。下方是<code>JWT</code>中常用的<code>header</code>字段:</p>
+<table>
+<thead>
+<tr>
+<th>code(简拼)</th>
+<th>name（全拼）</th>
+<th>description（描述）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>typ</td>
+<td>Token type</td>
+<td>token类型(JWT、JWS、JWE)</td>
+</tr>
+<tr>
+<td>cty</td>
+<td>Content type</td>
+<td>payload部分的MediaType(使用嵌套签名或加密，建议将其设置为JWT)</td>
+</tr>
+<tr>
+<td>alg</td>
+<td>Message authentication code algorithm</td>
+<td>加解密算法</td>
+</tr>
+<tr>
+<td>kid</td>
+<td>Key ID</td>
+<td>算法密钥</td>
+</tr>
+<tr>
+<td>x5c</td>
+<td>x.509 Certificate Chain</td>
+<td>x509证书链（用于服务器验证签名是否有效以及令牌是否真实）</td>
+</tr>
+<tr>
+<td>x5u</td>
+<td>x.509 Certificate Chain URL</td>
+<td>x509证书链的URL（服务器将检索并使用此信息来验证签名是否真实）</td>
+</tr>
+<tr>
+<td>crit</td>
+<td>Critical</td>
+<td>用作实现定义的扩展，以便接受有效的令牌</td>
+</tr>
+</tbody></table>
+<h3 id="payload"><a href="#payload" class="headerlink" title="payload"></a>payload</h3><p><code>payload</code>部分其实就是一个完整的<code>Claims</code>,而<code>Claims</code>本质上是一个<code>JSON</code>字符串，我们会以<code>k-v</code>的形式去定义它。<code>JWT</code>规范中定义了内置的一些<code>Claims</code>属性，我们可以选用或者自定义一些业务特定的<code>Claims</code>(当然不能和内置的<code>Claims</code>发生冲突)，由于payload部分在<code>JWS</code>中仅作base64编码，即明文是直接暴露在外面的，所以自定义<code>Claims</code>的内容不能涉敏。</p>
+<p><code>JWT</code>中预定义的<code>Claims</code>:</p>
+<table>
+<thead>
+<tr>
+<th>code(简拼)</th>
+<th>name（全拼）</th>
+<th>description（描述）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>iss</td>
+<td>Issuer</td>
+<td>确定发布JWT的负责人</td>
+</tr>
+<tr>
+<td>sub</td>
+<td>Subject</td>
+<td>确定JWT的主体</td>
+</tr>
+<tr>
+<td>aud</td>
+<td>Audience</td>
+<td>标识JWT的目标收件人</td>
+</tr>
+<tr>
+<td>exp</td>
+<td>Expiration Time</td>
+<td>过期时间</td>
+</tr>
+<tr>
+<td>nbf</td>
+<td>Not Before</td>
+<td>确定JWT开始接受处理的时间。该值必须是NumericDate</td>
+</tr>
+<tr>
+<td>iat</td>
+<td>Issued at</td>
+<td>确定发布JWT的时间。该值必须是NumericDate</td>
+</tr>
+<tr>
+<td>jti</td>
+<td>JWT ID</td>
+<td>令牌的唯一标识符(区分大小写)</td>
+</tr>
+</tbody></table>
+<h3 id="Signature"><a href="#Signature" class="headerlink" title="Signature"></a>Signature</h3><p><code>JWS</code>生成签名依赖特定的签名算法将<code>header、payload</code>部分进行一次签名加密，比较常见的如<code>HS256(HMAC-SHA256)、RS256(RSA-SHA256)</code>。在<code>base64UrlEncode(header).base64UrlEncode(payload).</code>之后拼上此次计算的签名（base64编码后）即为一个完整的<code>java web token</code>。</p>
+<p> 以简单的<code>HMAC-SHA256</code>为例(伪)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义32位密钥</span></span><br><span class="line">String secretKey = <span class="string">"11111111111111111111111111111111"</span>;</span><br><span class="line"><span class="comment">// header payload 为base64编码后的值</span></span><br><span class="line">String content = header + <span class="string">"."</span> + payload;</span><br><span class="line">Mac mac = HmacUtils.getInitializedMac(HmacAlgorithms.HMAC_SHA_256,secretKey.getBytes(StandardCharsets.UTF_8));</span><br><span class="line"><span class="comment">// 签名</span></span><br><span class="line"><span class="keyword">byte</span>[] output = mac.doFinal(content.getBytes(StandardCharsets.UTF_8));</span><br><span class="line"><span class="comment">// base64得到最终签名结果</span></span><br><span class="line">String signaturePart = <span class="keyword">new</span> String(Base64.encodeBase64URLSafe(output), StandardCharsets.UTF_8);</span><br></pre></td></tr></table></figure>
+
+<h2 id="JWT认证流程"><a href="#JWT认证流程" class="headerlink" title="JWT认证流程"></a>JWT认证流程</h2><p><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/jwt/3.png" alt="result"></p>
+<p>由上图可知，整个<code>JWT</code>的认证流程分为6步：</p>
+<ul>
+<li>用户从浏览器携带用户名、密码等身份信息进行登录</li>
+<li>服务端确认身份信息后，通过指定的签名算法生成<code>token</code>(不包含敏感信息)</li>
+<li>服务器将<code>JWT</code>返回给浏览器端</li>
+<li>浏览器之后的请求中会把<code>token</code>携带在<code>Authorization Header</code>中一起发给服务端</li>
+<li>服务器验证<code>JWT</code>(包含签名以及特定的<code>Claims</code>属性)</li>
+<li>服务器将验证结果返回给浏览器</li>
+</ul>
+<h2 id="JWT生成解析流程"><a href="#JWT生成解析流程" class="headerlink" title="JWT生成解析流程"></a>JWT生成解析流程</h2><p>基于前面对<code>JWT</code>的认知，我们可以通过硬编码的方式，实现一套<code>JWT(JWS)</code>的生成、解析、校验的流程。</p>
+<p>引入<code>common、json</code>相关包：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-codec<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-codec<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>$&#123;latest-version&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.fasterxml.jackson.core<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jackson-databind<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>$&#123;latest-version&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>生成<code>JWT</code>示例代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * JWT签名采用HMAC SHA-256散列算法</span></span><br><span class="line"><span class="comment"> * 为了简化开发 固定header内容</span></span><br><span class="line"><span class="comment"> * 为例简化开发 固定claims</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@since</span> 1.8</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JsonGenerator</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 256bit 密钥</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String KEY = <span class="string">"11111111111111111111111111111111"</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 初始化序列化对象</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> ObjectMapper OBJECT_MAPPER = <span class="keyword">new</span> ObjectMapper();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// header</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;String,String&gt; HEADER = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">4</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// payload</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Map&lt;String,Object&gt; CLAIMS = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">4</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="comment">// 定义Token类型</span></span><br><span class="line">        HEADER.put(<span class="string">"typ"</span>,<span class="string">"JWT"</span>);</span><br><span class="line">        <span class="comment">// 定义签名算法</span></span><br><span class="line">        HEADER.put(<span class="string">"alg"</span>,<span class="string">"HS256"</span>);</span><br><span class="line">        <span class="comment">// 定义发行方</span></span><br><span class="line">        CLAIMS.put(<span class="string">"iss"</span>, <span class="string">"iss"</span>);</span><br><span class="line">        <span class="comment">// uuid</span></span><br><span class="line">        CLAIMS.put(<span class="string">"jti"</span>, <span class="number">1234567890L</span>);</span><br><span class="line">        <span class="comment">// 过期时间</span></span><br><span class="line">        CLAIMS.put(<span class="string">"exp"</span>, <span class="number">1648652266914L</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 编码header</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> JsonProcessingException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">String <span class="title">generateHeader</span><span class="params">()</span> <span class="keyword">throws</span> JsonProcessingException </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] headerBytes = OBJECT_MAPPER.writeValueAsBytes(HEADER);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> String(Base64.encodeBase64URLSafe(headerBytes), StandardCharsets.US_ASCII);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 编码payload</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> JsonProcessingException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">String <span class="title">generatePayload</span><span class="params">()</span> <span class="keyword">throws</span> JsonProcessingException </span>&#123;</span><br><span class="line">        <span class="keyword">byte</span>[] payloadBytes = OBJECT_MAPPER.writeValueAsBytes(CLAIMS);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> String(Base64.encodeBase64URLSafe(payloadBytes), StandardCharsets.UTF_8);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 对header、payload签名</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> header</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> payload</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">String <span class="title">generateSignature</span><span class="params">(String header, String payload)</span> </span>&#123;</span><br><span class="line">        String msg = header + <span class="string">"."</span> + payload;</span><br><span class="line">        Mac mac = HmacUtils.getInitializedMac(HmacAlgorithms.HMAC_SHA_256, KEY.getBytes(StandardCharsets.UTF_8));</span><br><span class="line">        <span class="keyword">byte</span>[] output = mac.doFinal(msg.getBytes(StandardCharsets.UTF_8));</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> String(Base64.encodeBase64URLSafe(output), StandardCharsets.UTF_8);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        JsonGenerator jsonGenerator = <span class="keyword">new</span> JsonGenerator();</span><br><span class="line">        String header = jsonGenerator.generateHeader();</span><br><span class="line">        System.out.println(<span class="string">"生成header部分:"</span>+header);</span><br><span class="line">        String payload = jsonGenerator.generatePayload();</span><br><span class="line">        System.out.println(<span class="string">"生成payload部分"</span>+payload);</span><br><span class="line">        String signature = jsonGenerator.generateSignature(header, payload);</span><br><span class="line">        System.out.println(<span class="string">"最终生成的token:"</span>+ Stream.of(header,payload,signature).collect(Collectors.joining(<span class="string">"."</span>)));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行main函数可以看到控制台输出:</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">生成header部分:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span><br><span class="line">生成payload部分eyJpc3MiOiJpc3MiLCJleHAiOjE2NDg2NTIyNjY5MTQsImp0aSI6MTIzNDU2Nzg5MH0</span><br><span class="line">最终生成的token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpc3MiLCJleHAiOjE2NDg2NTIyNjY5MTQsImp0aSI6MTIzNDU2Nzg5MH0.ZbddEf9xTWJJwnCiDNIWs4t1QUgYsIo7cg1hH4SfM1U</span><br></pre></td></tr></table></figure>
+
+<p>可以将生成<code>token</code>放到<a href="https://jwt.io/" target="_blank" rel="noopener">jwt.io</a>解析验证<br><img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/jwt/1.png" alt="result"></p>
+<p>其实这个逆向过程很简单，只需要按分隔符”.”取出编码后的<code>header、payload</code>以及<code>Signature</code>,在对<code>header、payload</code>做base64解码即可，简单的代码实现如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parse</span><span class="params">()</span></span>&#123;</span><br><span class="line">    String token = <span class="string">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpc3MiLCJleHAiOjE2NDg2NTIyNjY5MTQsImp0aSI6MTIzNDU2Nzg5MH0.ZbddEf9xTWJJwnCiDNIWs4t1QUgYsIo7cg1hH4SfM1U"</span>;</span><br><span class="line">    StringTokenizer tokenizer = <span class="keyword">new</span> StringTokenizer(token, <span class="string">"."</span>);</span><br><span class="line">    <span class="comment">// 我们知道输入格式 所以这里简单写</span></span><br><span class="line">    String[] result = <span class="keyword">new</span> String[]&#123;tokenizer.nextToken(),tokenizer.nextToken(),tokenizer.nextToken()&#125;;</span><br><span class="line">    String header = <span class="keyword">new</span> String(Base64.decodeBase64(result[<span class="number">0</span>]), StandardCharsets.UTF_8);</span><br><span class="line">    String payload = <span class="keyword">new</span> String(Base64.decodeBase64(result[<span class="number">1</span>]), StandardCharsets.UTF_8);</span><br><span class="line">    System.out.println(<span class="string">"解析后的header:"</span>+header);</span><br><span class="line">    System.out.println(<span class="string">"解析后的payload:"</span>+payload);</span><br><span class="line">    System.out.println(<span class="string">"签名部分:"</span>+result[<span class="number">2</span>]);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 控制台输出</span></span><br><span class="line">解析后的header:&#123;<span class="string">"alg"</span>:<span class="string">"HS256"</span>,<span class="string">"typ"</span>:<span class="string">"JWT"</span>&#125;</span><br><span class="line">解析后的payload:&#123;<span class="string">"iss"</span>:<span class="string">"iss"</span>,<span class="string">"exp"</span>:<span class="number">1648652266914</span>,<span class="string">"jti"</span>:<span class="number">1234567890</span>&#125;</span><br><span class="line">签名部分:ZbddEf9xTWJJwnCiDNIWs4t1QUgYsIo7cg1hH4SfM1U</span><br></pre></td></tr></table></figure>
+
+<p>最后非常重要的一步就是对<code>token</code>的完整与合法性校验。其一是验证上文解析出来的签名，其二是对<code>Claims</code>的重要属性做验证（例如过期时间）,伪代码实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">verify</span><span class="params">()</span> <span class="keyword">throws</span> Exception</span>&#123;</span><br><span class="line">    String token = <span class="string">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJpc3MiLCJleHAiOjE2NDg2NTIyNjY5MTQsImp0aSI6MTIzNDU2Nzg5MH0.ZbddEf9xTWJJwnCiDNIWs4t1QUgYsIo7cg1hH4SfM1U"</span>;</span><br><span class="line">    StringTokenizer tokenizer = <span class="keyword">new</span> StringTokenizer(token, <span class="string">"."</span>);</span><br><span class="line">    <span class="comment">// 我们知道输入格式 所以这里简单写</span></span><br><span class="line">    String[] result = <span class="keyword">new</span> String[]&#123;tokenizer.nextToken(),tokenizer.nextToken(),tokenizer.nextToken()&#125;;</span><br><span class="line">    String header = <span class="keyword">new</span> String(Base64.decodeBase64(result[<span class="number">0</span>]), StandardCharsets.UTF_8);</span><br><span class="line">    String payload = <span class="keyword">new</span> String(Base64.decodeBase64(result[<span class="number">1</span>]), StandardCharsets.UTF_8);</span><br><span class="line">    System.out.println(<span class="string">"解析后的header:"</span>+header);</span><br><span class="line">    System.out.println(<span class="string">"解析后的payload:"</span>+payload);</span><br><span class="line">    System.out.println(<span class="string">"签名部分:"</span>+result[<span class="number">2</span>]);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 校验签名合法性</span></span><br><span class="line">    String signature = generateSignature(result[<span class="number">0</span>], result[<span class="number">1</span>]);</span><br><span class="line">    <span class="keyword">if</span> (!Objects.equals(signature,result[<span class="number">2</span>]))&#123;</span><br><span class="line">        <span class="comment">// 签名校验不通过 自定义异常处理</span></span><br><span class="line">    &#125;</span><br><span class="line">    Map&lt;String, Object&gt; payloadMap = OBJECT_MAPPER.readValue(payload, <span class="keyword">new</span> TypeReference&lt;Map&lt;String, Object&gt;&gt;() &#123;&#125;);</span><br><span class="line">    <span class="keyword">long</span> exp = Long.parseLong(Objects.toString(payloadMap.get(<span class="string">"exp"</span>)));</span><br><span class="line">    <span class="comment">// claims校验 过期时间有效期为1小时</span></span><br><span class="line">    <span class="keyword">if</span> (System.currentTimeMillis() - exp &gt; <span class="number">60</span> * <span class="number">60</span> * <span class="number">1000</span>) &#123;</span><br><span class="line">        <span class="comment">// 签名已过期  自定义异常处理</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="JJWT实现"><a href="#JJWT实现" class="headerlink" title="JJWT实现"></a>JJWT实现</h2><p>上节的代码实现仅是简单的描述了<code>JWT</code>从生成、解析再到校验的过程，使用的签名算法的安全性较低且方式过于粗暴。在实际应用中还是需要采用主流的<code>JWT</code>框架,避免重复造轮子的同时，活跃的社区也能让问题快速的得到响应。</p>
+<p>以开源项目<code>JJWT</code>为例，生成<code>JWT</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">createJWT</span><span class="params">(String id, String issuer, String subject, <span class="keyword">long</span> ttlMillis)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 签名算法</span></span><br><span class="line">        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 定义密钥</span></span><br><span class="line">        String secretKey = <span class="string">"11111111111111111111111111111111"</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">long</span> nowMillis = System.currentTimeMillis();</span><br><span class="line">        Date now = <span class="keyword">new</span> Date(nowMillis);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 设置Claims</span></span><br><span class="line">        JwtBuilder builder = Jwts.builder().setId(id)</span><br><span class="line">                .setIssuedAt(now)</span><br><span class="line">                .setSubject(subject)</span><br><span class="line">                .setIssuer(issuer)</span><br><span class="line">                .signWith(<span class="keyword">new</span> SecretKeySpec(secretKey.getBytes(), <span class="string">"HmacSHA256"</span>), signatureAlgorithm);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置过期时间</span></span><br><span class="line">        <span class="keyword">if</span> (ttlMillis &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">long</span> expMillis = nowMillis + ttlMillis;</span><br><span class="line">            Date exp = <span class="keyword">new</span> Date(expMillis);</span><br><span class="line">            builder.setExpiration(exp);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 构建 JWT 并将其序列化为紧凑的 URL 安全字符串</span></span><br><span class="line">        <span class="keyword">return</span> builder.compact();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>解析校验<code>token</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">parseJWT</span><span class="params">(String jwt)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 定义密钥</span></span><br><span class="line">        String secretKey = <span class="string">"11111111111111111111111111111111"</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 解析token</span></span><br><span class="line">        Claims claims = Jwts.parserBuilder()</span><br><span class="line">                .setSigningKey(<span class="keyword">new</span> SecretKeySpec(secretKey.getBytes(), <span class="string">"HmacSHA256"</span>))</span><br><span class="line">                .build()</span><br><span class="line">            	 <span class="comment">// 解析payload部分</span></span><br><span class="line">            	 <span class="comment">// 进行签名校验，失败会抛出SignatureException异常 </span></span><br><span class="line">            	 <span class="comment">// token失效过期会抛出ExpiredJwtException异常</span></span><br><span class="line">                .parseClaimsJws(jwt)</span><br><span class="line">                .getBody();</span><br><span class="line">        System.out.println(<span class="string">"ID: "</span> + claims.getId());</span><br><span class="line">        System.out.println(<span class="string">"Subject: "</span> + claims.getSubject());</span><br><span class="line">        System.out.println(<span class="string">"Issuer: "</span> + claims.getIssuer());</span><br><span class="line">        System.out.println(<span class="string">"Expiration: "</span> + claims.getExpiration());</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><code>JWT</code>本质上是一种无状态的<code>token</code>令牌，它设计的初衷就是更关注<code>Claims</code>的完整性，任何拿到<code>JWT</code>的客户端都可以无障碍的和服务器进行交互。这既是它的优势（支持跨域验证，可以应用于单点登录），同时也是它的劣势（<code>JWS</code>只签名不加密，<code>token</code>泄漏后会有安全问题），所以我们需要在算法选型时尽量选择复杂算法，严格校验<code>Claims</code>中的属性并且<code>Claims</code>中不能有敏感字段。</p>
+<blockquote>
+为了处理<code>token</code>过期刷新的问题，前文提到的项目在程序设计上会利用<code>redis key</code>的<code>expire</code>机制，将<code>JWT</code>持久化到<code>redis</code>中。这一点其实有些违背了<code>JWT</code>的设计理念，并且让整个系统强依赖<code>redis</code>（redis挂了系统无法登录）。
+</blockquote>
+
+<p><code>JWT</code>与<code>CAS</code>不同的是，它的用户信息是以<code>token</code>的形式存储在客户端，而非存储在服务端。对于过期刷新的问题，其实可以参考<code>OAuth2</code>中<code>refresh token</code>的概念。</p>
+<p><strong>参考</strong></p>
+<p><a href="https://datatracker.ietf.org/doc/html/rfc7519" target="_blank" rel="noopener">规范性文件RFC7519</a></p>
+<p><a href="https://github.com/jwtk/jjwt" target="_blank" rel="noopener">JJWT</a></p>
+<p><a href="https://en.wikipedia.org/wiki/JSON_Web_Token" target="_blank" rel="noopener">维基百科</a></p>
+
+          
+            <br>
+            
+  
+    
+    
+
+<section class="widget copyright  desktop mobile">
+  <div class='content'>
+    
+      <blockquote>
+        
+          
+            <p>博客内容遵循 署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</p>
+
+          
+        
+          
+            <p>本文永久链接是：<a href=https://sillybilly-share.top/JWT%E5%8E%9F%E7%90%86%E4%B8%8E%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8.html>https://sillybilly-share.top/JWT%E5%8E%9F%E7%90%86%E4%B8%8E%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8.html</a></p>
+          
+        
+      </blockquote>
+    
+  </div>
+</section>
+
+  
+
+  
+    
+    
+
+<section class="widget qrcode  desktop mobile">
+  
+
+  <div class='content article-entry'>
+    
+  </div>
+</section>
+
+  
+
+
+          
+        </div>
+        
+          
+
+
+  <section class='meta' id="footer-meta">
+    <div class='new-meta-box'>
+      
+        
+          <div class="new-meta-item date" itemprop="dateUpdated" datetime="2022-11-24T09:35:09+08:00">
+  <a class='notlink'>
+    <i class="fas fa-save" aria-hidden="true"></i>
+    <p>更新于：2022年11月24日</p>
+  </a>
+</div>
+
+        
+      
+        
+          
+  
+  <div class="new-meta-item meta-tags"><a class="tag" href="/tags/jwt/" rel="nofollow"><i class="fas fa-hashtag" aria-hidden="true"></i><p>jwt</p></a></div>
+
+
+        
+      
+        
+          
+
+        
+      
+        
+          
+  <div class="new-meta-item share -mob-share-list">
+  <div class="-mob-share-list share-body">
+    
+      
+        <a class="-mob-share-qq" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://connect.qq.com/widget/shareqq/index.html?url=https://sillybilly-share.top/JWT%E5%8E%9F%E7%90%86%E4%B8%8E%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8.html&title=JWT原理与基本使用 - 微笑流浪&summary=前提写这篇文章的原因是因为前段时间接手了一个项目，它并没有使用公司的统一的单点登录平台sso,而是通过调用uim接口来验证用户信息，并以JWT的实现方式生成一段token存到客户端的localStorage中，登录后的客户端每次携带该token去请求后端，经由后端服务器自定义的filter解析校验token完成登录。
+究其原因，可能目前sso的实现方案符合cas标准，需要利用浏览器的重定向功能，而app全是接口交互，所以在系统需要兼容web端与移动端的情况下，采用了JWT来实现登录认证流程。之前我对于JWT是一种半了解的状态，于是乎趁此机会浅学了一波JWT的基本使用。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qq.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-qzone" title="" rel="external nofollow noopener noreferrer"
+          
+          href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=https://sillybilly-share.top/JWT%E5%8E%9F%E7%90%86%E4%B8%8E%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8.html&title=JWT原理与基本使用 - 微笑流浪&summary=前提写这篇文章的原因是因为前段时间接手了一个项目，它并没有使用公司的统一的单点登录平台sso,而是通过调用uim接口来验证用户信息，并以JWT的实现方式生成一段token存到客户端的localStorage中，登录后的客户端每次携带该token去请求后端，经由后端服务器自定义的filter解析校验token完成登录。
+究其原因，可能目前sso的实现方案符合cas标准，需要利用浏览器的重定向功能，而app全是接口交互，所以在系统需要兼容web端与移动端的情况下，采用了JWT来实现登录认证流程。之前我对于JWT是一种半了解的状态，于是乎趁此机会浅学了一波JWT的基本使用。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/qzone.png">
+          
+        </a>
+      
+    
+      
+        <a class="-mob-share-weibo" title="" rel="external nofollow noopener noreferrer"
+          
+          href="http://service.weibo.com/share/share.php?url=https://sillybilly-share.top/JWT%E5%8E%9F%E7%90%86%E4%B8%8E%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8.html&title=JWT原理与基本使用 - 微笑流浪&summary=前提写这篇文章的原因是因为前段时间接手了一个项目，它并没有使用公司的统一的单点登录平台sso,而是通过调用uim接口来验证用户信息，并以JWT的实现方式生成一段token存到客户端的localStorage中，登录后的客户端每次携带该token去请求后端，经由后端服务器自定义的filter解析校验token完成登录。
+究其原因，可能目前sso的实现方案符合cas标准，需要利用浏览器的重定向功能，而app全是接口交互，所以在系统需要兼容web端与移动端的情况下，采用了JWT来实现登录认证流程。之前我对于JWT是一种半了解的状态，于是乎趁此机会浅学了一波JWT的基本使用。"
+          
+          >
+          
+            <img src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/weibo.png">
+          
+        </a>
+      
+    
+  </div>
+</div>
+
+
+
+        
+      
+    </div>
+  </section>
+
+
+        
+        
+          <div class="prev-next">
+            
+              <a class='prev' href='/mybatis%20Mapper%E6%98%A0%E5%B0%84%E9%97%AE%E9%A2%98.html'>
+                <p class='title'><i class="fas fa-chevron-left" aria-hidden="true"></i>mybatis mapper扫描问题</p>
+                <p class='content'>前提一个平凡的晚上，我悠闲自得的一边听歌一边码着代码，突然调试页面上报错500，查看后端显示org.apache.ibatis.binding.BindingException: Invalid...</p>
+              </a>
+            
+            
+              <a class='next' href='/swagger%E6%8E%A5%E5%8F%A3%E6%96%87%E6%A1%A3%E5%90%8C%E6%AD%A5yapi%E5%AE%9A%E4%B9%89%E6%A0%87%E5%87%86.html'>
+                <p class='title'>swagger接口文档同步yapi定义标准<i class="fas fa-chevron-right" aria-hidden="true"></i></p>
+                <p class='content'>前提在与前端约定yapi接口后，后端可能会与前端私下沟通修改接口方案或者业务调整未同步至yapi,导致经常性会出现实际开发接口与yapi维护的接口不统一的情况。滞后的接口文档，给后续介入开发的人...</p>
+              </a>
+            
+          </div>
+        
+      </section>
+    </article>
+  
+
+  
+    <!-- 显示推荐文章和评论 -->
+
+
+
+  <article class="post white-box comments shadow floatable">
+    <section class="article typo">
+      <p ct><i class='fas fa-comments'></i> 评论</p>
+      
+      
+      
+        <section id="comments">
+          <div id="lv-container" data-id="city" data-uid="MTAyMC80OTQ2OS8yNTk2MQ==">
+            <noscript><div><i class='fas fa-exclamation-triangle'>&nbsp;无法加载Livere评论系统，请确保您的网络能够正常访问。</div></noscript>
+          </div>
+        </section>
+      
+      
+      
+    </section>
+  </article>
+
+
+  
+
+
+
+
+<!-- 根据页面mathjax变量决定是否加载MathJax数学公式js -->
+
+
+
+  <script>
+    window.subData = {
+      title: 'JWT原理与基本使用',
+      tools: true
+    }
+  </script>
+
+
+
+</div>
+<aside class='l_side'>
+  
+  
+
+  
+    
+    
+
+
+  <section class="widget toc-wrapper shadow floatable desktop mobile">
+    
+  <header>
+    
+      <i class="fas fa-list fa-fw" aria-hidden="true"></i><span class='name'>本文目录</span>
+    
+  </header>
+
+
+    <div class='content'>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前提"><span class="toc-text">前提</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#概念"><span class="toc-text">概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JWT布局"><span class="toc-text">JWT布局</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#header"><span class="toc-text">header</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#payload"><span class="toc-text">payload</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Signature"><span class="toc-text">Signature</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JWT认证流程"><span class="toc-text">JWT认证流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JWT生成解析流程"><span class="toc-text">JWT生成解析流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JJWT实现"><span class="toc-text">JJWT实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </section>
+
+
+  
+
+
+</aside>
+
+
+  
+  <footer class="clearfix white">
+    <br><br>
+    
+      
+        <div class="aplayer-container">
+          
+
+  
+    <meting-js
+      theme='#1BCDFC'
+      autoplay='false'
+      volume='0.7'
+      loop='all'
+      order='list'
+      fixed='false'
+      list-max-height='340px'
+      server='netease'
+      type='playlist'
+      id='4926244994'
+      list-folded='true'>
+    </meting-js>
+  
+
+
+        </div>
+      
+    
+      
+        <br>
+        <div class="social-wrapper">
+          
+            
+              <a href="/atom.xml"
+                class="social fas fa-rss flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="mailto:1579700874@qq.com"
+                class="social fas fa-envelope flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+            
+              <a href="https://github.com/silly-billy"
+                class="social fab fa-github flat-btn"
+                target="_blank"
+                rel="external nofollow noopener noreferrer">
+              </a>
+            
+          
+        </div>
+      
+    
+      
+        
+          <div><p>博客内容遵循 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener">署名-非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0) 协议</a></p>
+</div>
+        
+      
+    
+      
+        
+          <div><p>本站使用 <a href="https://volantis.js.org/" target="_blank" rel="noopener">Volantis</a> 作为主题 ， 总访问量为 <span id="busuanzi_value_site_uv"></span> 次</p>
+</div>
+        
+      
+    
+      
+        <div class='copyright'>
+        <p>[Copyright © 2019-2020 silly-billy]</p>
+
+        </div>
+      
+    
+  </footer>
+
+<script>setLoadingBarProgress(80);</script>
+
+
+      <script>setLoadingBarProgress(60);</script>
+    </div>
+    <a class="s-top fas fa-arrow-up fa-fw" href='javascript:void(0)'></a>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.min.js"></script>
+
+
+  <script>
+    
+    var SEARCH_SERVICE = "hexo" || "hexo";
+    var ROOT = "/" || "/";
+    if (!ROOT.endsWith('/')) ROOT += '/';
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/instant_page.js" type="module" defer integrity="sha384-OeDn4XE77tdHo8pGtE1apMPmAipjoxUQ++eeJa6EtJCfHlvijigWiJpD7VDPWXV1"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/waves.min.js"></script>
+
+  <script type="text/javascript">
+    $(function() {
+      Waves.attach('.flat-btn', ['waves-button']);
+      Waves.attach('.float-btn', ['waves-button', 'waves-float']);
+      Waves.attach('.float-btn-light', ['waves-button', 'waves-float', 'waves-light']);
+      Waves.attach('.flat-box', ['waves-block']);
+      Waves.attach('.float-box', ['waves-block', 'waves-float']);
+      Waves.attach('.waves-image');
+      Waves.init();
+    });
+  </script>
+
+
+  <script async src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/busuanzi.pure.mini.js"></script>
+
+
+
+  
+  
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.backstretch.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var imgs=["https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud.jpg", "https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/img/backgroud-1.jpg"];
+        if ('true' == 'true') {
+          function shuffle(arr){
+            /*From countercurrent-time*/
+            var n = arr.length;
+            while(n--) {
+              var index = Math.floor(Math.random() * n);
+              var temp = arr[index];
+              arr[index] = arr[n];
+              arr[n] = temp;
+            }
+          }
+          shuffle(imgs);
+        }
+        if ('.cover') {
+          $('.cover').backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        } else {
+          $.backstretch(
+            imgs,
+          {
+            duration: "20000",
+            fade: "1500"
+          });
+        }
+      });
+    </script>
+  
+
+
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/APlayer.min.js" async></script>
+
+  
+    
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/Meting.min.js" async></script>
+
+  
+
+
+
+
+
+  <script type="text/javascript">
+    (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+      if (typeof LivereTower === 'function') { return; }
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+      e.parentNode.insertBefore(j, e);
+    })(document, 'script');
+  </script>
+
+
+
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/app.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/search.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/comment_typing.js"></script>
+
+
+
+<!-- 复制 -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/clipboard.min.js"></script>
+<script>
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="fas fa-copy"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copyed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-clipboard-check');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPYED';
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('fa-copy');
+        $icon.addClass('fa-exclamation-triangle');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+
+
+<!-- fancybox -->
+
+  <script src="https://cdn.jsdelivr.net/gh/silly-billy/eurekademo@blog_info/static/common/jquery.fancybox.min.js"></script>
+<script>
+  let LAZY_LOAD_IMAGE = "";
+  $(".article-entry").find("fancybox").find("img").each(function () {
+      var element = document.createElement("a");
+      $(element).attr("data-fancybox", "gallery");
+      $(element).attr("href", $(this).attr("src"));
+      /* 图片采用懒加载处理时,
+       * 一般图片标签内会有个属性名来存放图片的真实地址，比如 data-original,
+       * 那么此处将原本的属性名src替换为对应属性名data-original,
+       * 修改如下
+       */
+       if (LAZY_LOAD_IMAGE) {
+         $(element).attr("href", $(this).attr("data-original"));
+       }
+      $(this).wrap(element);
+  });
+</script>
+
+
+
+
+
+
+<script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7706779639350562' crossorigin='anonymous'></script>
+<ins class='adsbygoogle' style='display:block' data-ad-client='ca-pub-7706779639350562' data-ad-slot='8192807482' data-ad-format='auto' data-full-width-responsive='true'></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+
+  <script>setLoadingBarProgress(100);</script>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/haruto.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
